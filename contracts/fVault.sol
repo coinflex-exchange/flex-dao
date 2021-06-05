@@ -8,12 +8,9 @@ import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import '../interfaces/IController.sol';
 
 contract fVault is ERC20 {
-  using SafeERC20
-  for IERC20;
-  using Address
-  for address;
-  using SafeMath
-  for uint256;
+  using SafeERC20 for IERC20;
+  using Address for address;
+  using SafeMath for uint256;
 
   IERC20 public token;
 
