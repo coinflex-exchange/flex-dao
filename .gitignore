@@ -3,3 +3,9 @@ __pycache__
 .hypothesis/
 build/
 reports/
+
+### Ignore All YAML files besides brownie-config, environment, and networks ###
+**/*.yml
+!brownie-config.yml
+!environment.yml
+!networks.yml
