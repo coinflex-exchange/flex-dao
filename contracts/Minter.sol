@@ -6,7 +6,7 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
-import "./RewardToken.sol";
+import './RewardToken.sol';
 
 // Minter of Reward tokens.
 // Note that it's ownable and the owner wields tremendous power. The ownership
@@ -233,7 +233,7 @@ contract Minter is Ownable {
   function withdraw(uint256 _pid, uint256 _amount) public {
     PoolInfo storage pool = poolInfo[_pid];
     UserInfo storage user = userInfo[_pid][msg.sender];
-    require(user.amount >= _amount, "withdraw: not good");
+    require(user.amount >= _amount, 'withdraw: not good');
     updatePool(_pid);
     uint256 pending = user.amount.mul(pool.accTokenPerShare).div(1e12).sub(
       user.rewardDebt
@@ -267,14 +267,14 @@ contract Minter is Ownable {
 
   // Update dev address by the previous dev.
   function dev(address _devaddr) public {
-    require(msg.sender == devaddr, "dev: wut?");
+    require(msg.sender == devaddr, 'dev: wut?');
     devaddr = _devaddr;
   }
 
   // **** Additional functions separate from the original masterchef contract ****
 
   function setRewardPerBlock(uint256 _tokenPerBlock) public onlyOwner {
-    require(_tokenPerBlock > 0, "!tokenPerBlock-0");
+    require(_tokenPerBlock > 0, '!tokenPerBlock-0');
 
     tokenPerBlock = _tokenPerBlock;
   }
@@ -284,7 +284,7 @@ contract Minter is Ownable {
   }
 
   function setDevFundDivRate(uint256 _devFundDivRate) public onlyOwner {
-    require(_devFundDivRate > 0, "!devFundDivRate-0");
+    require(_devFundDivRate > 0, '!devFundDivRate-0');
     devFundDivRate = _devFundDivRate;
   }
 }

@@ -98,7 +98,7 @@ is IOneSplitAudit
   function protocols() external pure returns (string[2] memory) 
   {
     return [
-      "FLEX Coin", "FLEX USD"
+      'FLEX Coin', 'FLEX USD'
     ];
   }
 

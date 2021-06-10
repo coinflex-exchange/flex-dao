@@ -373,8 +373,8 @@ def deposit_for(_addr: address, _value: uint256):
   '''
   _locked: LockedBalance = self.locked[_addr]
   assert _value > 0  # dev: need non-zero value
-  assert _locked.amount > 0, "No existing lock found"
-  assert _locked.end > block.timestamp, "Cannot add to expired lock. Withdraw"
+  assert _locked.amount > 0, 'No existing lock found'
+  assert _locked.end > block.timestamp, 'Cannot add to expired lock. Withdraw'
   self._deposit_for(_addr, _value, 0, self.locked[_addr], DEPOSIT_FOR_TYPE)
 
 @external
@@ -389,9 +389,9 @@ def create_lock(_value: uint256, _unlock_time: uint256):
   unlock_time: uint256 = (_unlock_time / WEEK) * WEEK  # Locktime is rounded down to weeks
   _locked: LockedBalance = self.locked[msg.sender]
   assert _value > 0  # dev: need non-zero value
-  assert _locked.amount == 0, "Withdraw old tokens first"
-  assert unlock_time > block.timestamp, "Can only lock until time in the future"
-  assert unlock_time <= block.timestamp + MAXTIME, "Voting lock can be 4 years max"
+  assert _locked.amount == 0, 'Withdraw old tokens first'
+  assert unlock_time > block.timestamp, 'Can only lock until time in the future'
+  assert unlock_time <= block.timestamp + MAXTIME, 'Voting lock can be 4 years max'
   self._deposit_for(msg.sender, _value, unlock_time, _locked, CREATE_LOCK_TYPE)
 
 @external
@@ -405,8 +405,8 @@ def increase_amount(_value: uint256):
   self.assert_not_contract(msg.sender)
   _locked: LockedBalance = self.locked[msg.sender]
   assert _value > 0  # dev: need non-zero value
-  assert _locked.amount > 0, "No existing lock found"
-  assert _locked.end > block.timestamp, "Cannot add to expired lock. Withdraw"
+  assert _locked.amount > 0, 'No existing lock found'
+  assert _locked.end > block.timestamp, 'Cannot add to expired lock. Withdraw'
   self._deposit_for(msg.sender, _value, 0, _locked, INCREASE_LOCK_AMOUNT)
 
 @external
@@ -419,10 +419,10 @@ def increase_unlock_time(_unlock_time: uint256):
   self.assert_not_contract(msg.sender)
   _locked: LockedBalance = self.locked[msg.sender]
   unlock_time: uint256 = (_unlock_time / WEEK) * WEEK  # Locktime is rounded down to weeks
-  assert _locked.end > block.timestamp, "Lock expired"
-  assert _locked.amount > 0, "Nothing is locked"
-  assert unlock_time > _locked.end, "Can only increase lock duration"
-  assert unlock_time <= block.timestamp + MAXTIME, "Voting lock can be 4 years max"
+  assert _locked.end > block.timestamp, 'Lock expired'
+  assert _locked.amount > 0, 'Nothing is locked'
+  assert unlock_time > _locked.end, 'Can only increase lock duration'
+  assert unlock_time <= block.timestamp + MAXTIME, 'Voting lock can be 4 years max'
   self._deposit_for(msg.sender, 0, unlock_time, _locked, INCREASE_UNLOCK_TIME)
 
 @external
@@ -433,7 +433,7 @@ def withdraw():
   @dev Only possible if the lock has expired
   '''
   _locked: LockedBalance = self.locked[msg.sender]
-  assert block.timestamp >= _locked.end, "The lock didn't expire"
+  assert block.timestamp >= _locked.end, 'The lock didn\'t expire'
   value: uint256 = convert(_locked.amount, uint256)
   old_locked: LockedBalance = _locked
   _locked.end = 0

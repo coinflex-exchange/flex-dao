@@ -117,8 +117,8 @@ contract GaugeProxy is ProtocolGovernance
   // Add new token gauge
   function addGauge(address _token) external
   {
-    require(msg.sender == governance, "!gov");
-    require(gauges[_token] == address(0x0), "exists");
+    require(msg.sender == governance, '!gov');
+    require(gauges[_token] == address(0x0), 'exists');
     gauges[_token] = address(new Gauge(_token));
     _tokens.push(_token);
   }
@@ -127,9 +127,9 @@ contract GaugeProxy is ProtocolGovernance
   // Sets Minter PID
   function setPID(uint _pid) external
   {
-    require(msg.sender == governance, "!gov");
-    require(pid == 0, "pid has already been set");
-    require(_pid > 0, "invalid pid");
+    require(msg.sender == governance, '!gov');
+    require(pid == 0, 'pid has already been set');
+    require(_pid > 0, 'invalid pid');
     pid = _pid;
   }
 
@@ -137,7 +137,7 @@ contract GaugeProxy is ProtocolGovernance
   // Deposits fTOKEN into Minter
   function deposit() public
   {
-    require(pid > 0, "pid not initialized");
+    require(pid > 0, 'pid not initialized');
     IERC20 _token = TOKEN;
     uint _balance = _token.balanceOf(address(this));
     _token.safeApprove(address(MASTER), 0);

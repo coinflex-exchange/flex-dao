@@ -28,7 +28,7 @@ contract Gauge is ILiquidityGauge, ReentrancyGuard
   uint256 public rewardPerTokenStored;
 
   modifier onlyDistribution() {
-    require(msg.sender == DISTRIBUTION, "Caller is not RewardsDistribution contract");
+    require(msg.sender == DISTRIBUTION, 'Caller is not RewardsDistribution contract');
     _;
   }
 
@@ -105,7 +105,7 @@ contract Gauge is ILiquidityGauge, ReentrancyGuard
   }
 
   function _deposit(uint amount, address account) internal nonReentrant updateReward(account) {
-    require(amount > 0, "Cannot stake 0");
+    require(amount > 0, 'Cannot stake 0');
     _totalSupply = _totalSupply.add(amount);
     _balances[account] = _balances[account].add(amount);
     emit Staked(account, amount);
@@ -121,7 +121,7 @@ contract Gauge is ILiquidityGauge, ReentrancyGuard
   }
 
   function _withdraw(uint amount) internal nonReentrant updateReward(msg.sender) {
-    require(amount > 0, "Cannot withdraw 0");
+    require(amount > 0, 'Cannot withdraw 0');
     _totalSupply = _totalSupply.sub(amount);
     _balances[msg.sender] = _balances[msg.sender].sub(amount);
     TOKEN.safeTransfer(msg.sender, amount);
@@ -157,7 +157,7 @@ contract Gauge is ILiquidityGauge, ReentrancyGuard
     // very high values of rewardRate in the earned and rewardsPerToken functions;
     // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
     uint balance = REWARD.balanceOf(address(this));
-    require(rewardRate <= balance.div(DURATION), "Provided reward too high");
+    require(rewardRate <= balance.div(DURATION), 'Provided reward too high');
 
     lastUpdateTime = block.timestamp;
     periodFinish = block.timestamp.add(DURATION);

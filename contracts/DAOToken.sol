@@ -6,9 +6,9 @@ import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 contract DAOToken {
   using SafeMath for uint;
   /// @notice EIP-20 token name for this token
-  string public constant name = "DAO TOKEN";
+  string public constant name = 'DAO TOKEN';
   /// @notice EIP-20 token symbol for this token
-  string public constant symbol = "fTOKEN";
+  string public constant symbol = 'fTOKEN';
   /// @notice EIP-20 token decimals for this token
   uint8 public constant decimals = 18;
   /// @notice Total number of tokens in circulation
@@ -87,7 +87,7 @@ contract DAOToken {
     address spender = msg.sender;
     uint spenderAllowance = allowances[src][spender];
     if (spender != src && spenderAllowance > 0) {
-      uint newAllowance = spenderAllowance.sub(amount, "transferFrom: exceeds spender allowance");
+      uint newAllowance = spenderAllowance.sub(amount, 'transferFrom: exceeds spender allowance');
       allowances[src][spender] = newAllowance;
       emit Approval(src, spender, newAllowance);
     }
@@ -97,9 +97,9 @@ contract DAOToken {
 
   function _transferTokens(address src, address dst, uint amount) internal
   {
-    require(src != address(0), "_transferTokens: zero address");
-    require(dst != address(0), "_transferTokens: zero address");
-    balances[src] = balances[src].sub(amount, "_transferTokens: exceeds balance");
+    require(src != address(0), '_transferTokens: zero address');
+    require(dst != address(0), '_transferTokens: zero address');
+    balances[src] = balances[src].sub(amount, '_transferTokens: exceeds balance');
     balances[dst] = balances[dst].add(amount);
     emit Transfer(src, dst, amount);
   }
