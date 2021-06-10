@@ -37,13 +37,10 @@ def commit_set_admins(_o_admin: address, _e_admin: address):
   @param _o_admin Ownership admin
   @param _e_admin Emergency admin
   '''
-  assert msg.sender == self.ownership_admin, "Access denied"
-
+  assert msg.sender == self.ownership_admin, 'Access denied' # dev: Access denied
   self.future_ownership_admin = _o_admin
   self.future_emergency_admin = _e_admin
-
   log CommitAdmins(_o_admin, _e_admin)
-
 
 @external
 def accept_set_admins():
@@ -51,14 +48,11 @@ def accept_set_admins():
   @notice Apply the effects of `commit_set_admins`
   @dev Only callable by the new owner admin
   '''
-  assert msg.sender == self.future_ownership_admin, "Access denied"
-
+  assert msg.sender == self.future_ownership_admin, 'Access denied' # dev: Access denied
   e_admin: address = self.future_emergency_admin
   self.ownership_admin = msg.sender
   self.emergency_admin = e_admin
-
   log ApplyAdmins(msg.sender, e_admin)
-
 
 @external
 @nonreentrant('lock')
@@ -68,9 +62,8 @@ def commit_transfer_ownership(_gauge: address, new_owner: address):
   @param _gauge Gauge which ownership is to be transferred
   @param new_owner New gauge owner address
   '''
-  assert msg.sender == self.ownership_admin, "Access denied"
+  assert msg.sender == self.ownership_admin, 'Access denied' # dev: Access denied
   LiquidityGauge(_gauge).commit_transfer_ownership(new_owner)
-
 
 @external
 @nonreentrant('lock')
@@ -81,7 +74,6 @@ def accept_transfer_ownership(_gauge: address):
   '''
   LiquidityGauge(_gauge).accept_transfer_ownership()
 
-
 @external
 @nonreentrant('lock')
 def set_killed(_gauge: address, _is_killed: bool):
@@ -91,9 +83,8 @@ def set_killed(_gauge: address, _is_killed: bool):
   @param _gauge Gauge address
   @param _is_killed Killed status to set
   '''
-  assert msg.sender in [self.ownership_admin, self.emergency_admin], "Access denied"
+  assert msg.sender in [self.ownership_admin, self.emergency_admin], 'Access denied' # dev: Access denied
   LiquidityGauge(_gauge).set_killed(_is_killed)
-
 
 @external
 @nonreentrant('lock')
@@ -104,10 +95,10 @@ def set_rewards(_gauge: address, _reward_contract: address, _sigs: bytes32, _rew
   @param _reward_contract Reward contract address. Set to ZERO_ADDRESS to
                           disable staking.
   @param _sigs Four byte selectors for staking, withdrawing and claiming,
-                right padded with zero bytes. If the reward contract can
-                be claimed from but does not require staking, the staking
-                and withdraw selectors should be set to 0x00
+               right padded with zero bytes. If the reward contract can
+               be claimed from but does not require staking, the staking
+               and withdraw selectors should be set to 0x00
   @param _reward_tokens List of claimable tokens for this reward contract
   '''
-  assert msg.sender == self.ownership_admin, "Access denied"
+  assert msg.sender == self.ownership_admin, 'Access denied' # dev: Access denied
   LiquidityGauge(_gauge).set_rewards(_reward_contract, _sigs, _reward_tokens)
