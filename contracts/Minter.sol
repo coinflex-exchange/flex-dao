@@ -149,7 +149,7 @@ contract Minter is Ownable {
   }
 
   // View function to see pending REWARDs on frontend.
-  function pendingPickle(uint256 _pid, address _user)
+  function pendingReward(uint256 _pid, address _user)
   external
   view
   returns(uint256) {
@@ -273,7 +273,7 @@ contract Minter is Ownable {
 
   // **** Additional functions separate from the original masterchef contract ****
 
-  function setPicklePerBlock(uint256 _tokenPerBlock) public onlyOwner {
+  function setRewardPerBlock(uint256 _tokenPerBlock) public onlyOwner {
     require(_tokenPerBlock > 0, "!tokenPerBlock-0");
 
     tokenPerBlock = _tokenPerBlock;
