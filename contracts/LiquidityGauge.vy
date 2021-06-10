@@ -10,7 +10,7 @@ from vyper.interfaces import ERC20
 
 implements: ERC20
 
-interface ERC20DAO:
+interface DAOToken:
   def future_epoch_time_write() -> uint256: nonpayable
   def rate() -> uint256: view
 
@@ -131,8 +131,8 @@ def __init__(_lp_token: address, _minter: address, _admin: address):
   self.controller = controller
   self.voting_escrow = Controller(controller).voting_escrow()
   self.period_timestamp[0] = block.timestamp
-  self.inflation_rate = ERC20DAO(dao_token).rate()
-  self.future_epoch_time = ERC20DAO(dao_token).future_epoch_time_write()
+  self.inflation_rate = DAOToken(dao_token).rate()
+  self.future_epoch_time = DAOToken(dao_token).future_epoch_time_write()
 
 @view
 @external
@@ -237,8 +237,8 @@ def _checkpoint(addr: address):
   prev_future_epoch: uint256 = self.future_epoch_time
   if prev_future_epoch >= _period_time:
     _token: address = self.dao_token
-    self.future_epoch_time = ERC20DAO(_token).future_epoch_time_write()
-    new_rate = ERC20DAO(_token).rate()
+    self.future_epoch_time = DAOToken(_token).future_epoch_time_write()
+    new_rate = DAOToken(_token).rate()
     self.inflation_rate = new_rate
   if self.is_killed:
     # Stop distributing inflation as soon as killed
