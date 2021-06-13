@@ -9,14 +9,14 @@ import '@openzeppelin/contracts/utils/math/Math.sol';
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import '../interfaces/ILiquidityGauge.sol';
 
-contract Gauge is ILiquidityGauge, ReentrancyGuard
+contract LiquidityGauge is ILiquidityGauge, ReentrancyGuard
 {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
-  IERC20 public constant REWARD = IERC20(0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5);
-  IERC20 public constant ESCROW = IERC20(0xbBCf169eE191A1Ba7371F30A1C344bFC498b29Cf);
-  address public constant TREASURY = address(0x066419EaEf5DE53cc5da0d8702b990c5bc7D1AB3);
+  IERC20 public immutable REWARD;
+  IERC20 public immutable ESCROW;
+  address public immutable TREASURY;
 
   IERC20 public immutable TOKEN;
   address public immutable DISTRIBUTION;
@@ -41,9 +41,21 @@ contract Gauge is ILiquidityGauge, ReentrancyGuard
   mapping(address => uint256) public derivedBalances;
   mapping(address => uint) private _base;
 
-  constructor(address _token)
+  constructor(
+    address _token,
+    address _reward,
+    address _escrow,
+    address _treasury
+  )
   {
+    require(_token != address(0), '_token cannot be null address.');
+    require(_reward != address(0), '_reward cannot be null address.');
+    require(_escrow != address(0), '_escrow cannot be null address.');
+    require(_treasury != address(0), '_treasury canot be null address.');
     TOKEN = IERC20(_token);
+    REWARD = IERC20(_reward);
+    ESCROW = IERC20(_escrow);
+    TREASURY = _treasury;
     DISTRIBUTION = msg.sender;
   }
 

@@ -8,12 +8,14 @@ import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import './RewardToken.sol';
 
-// Minter of Reward tokens.
+// Distributor of Reward tokens.
 // Note that it's ownable and the owner wields tremendous power. The ownership
 // will be transferred to a governance smart contract once tokens is sufficiently
 // distributed and the community can show to govern itself.
 
-contract Minter is Ownable {
+contract Distributor
+is Ownable
+{
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
@@ -206,7 +208,7 @@ contract Minter is Ownable {
     pool.lastRewardBlock = block.number;
   }
 
-  // Deposit LP tokens to MasterChef for REWARD allocation.
+  // Deposit LP tokens to Distributor for REWARD allocation.
   function deposit(uint256 _pid, uint256 _amount) public {
     PoolInfo storage pool = poolInfo[_pid];
     UserInfo storage user = userInfo[_pid][msg.sender];
@@ -229,7 +231,7 @@ contract Minter is Ownable {
     emit Deposit(msg.sender, _pid, _amount);
   }
 
-  // Withdraw LP tokens from MasterChef.
+  // Withdraw LP tokens from 0.
   function withdraw(uint256 _pid, uint256 _amount) public {
     PoolInfo storage pool = poolInfo[_pid];
     UserInfo storage user = userInfo[_pid][msg.sender];

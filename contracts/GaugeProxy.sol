@@ -8,16 +8,17 @@ import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import './DAOToken.sol';
 import './LiquidityGauge.sol';
 import './ProtocolGovernance.sol';
-import '../interfaces/IMinter.sol';
+import '../interfaces/IDistributor.sol';
 
 contract GaugeProxy is ProtocolGovernance
 {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
-  IMinter public constant MASTER = IMinter(0xbD17B1ce622d73bD438b9E658acA5996dc394b0d);
-  IERC20 public constant ESCROW = IERC20(0xbBCf169eE191A1Ba7371F30A1C344bFC498b29Cf);
-  IERC20 public constant REWARD = IERC20(0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5);
+  IDistributor public immutable DISTRIBUTOR;
+  IERC20 public immutable ESCROW;
+  IERC20 public immutable REWARD;
+  address public immutable TREASURY;
 
   IERC20 public immutable TOKEN;
 
@@ -39,8 +40,21 @@ contract GaugeProxy is ProtocolGovernance
     return gauges[_token];
   }
 
-  constructor()
+  constructor(
+    address _distributor,
+    address _escrow,
+    address _reward,
+    address _treasury
+  )
   {
+    require(_distributor != address(0), '_distributor cannot be null address.');
+    require(_escrow != address(0), '_escrow cannot be null address.');
+    require(_reward != address(0), '_reward cannot be null address.');
+    require(_treasury != address(0), '_treasury cannot be null address.');
+    DISTRIBUTOR = IDistributor(_distributor);
+    ESCROW = IERC20(_escrow);
+    REWARD = IERC20(_reward);
+    TREASURY = _treasury;
     TOKEN = IERC20(address(new DAOToken()));
     governance = msg.sender;
   }
@@ -119,7 +133,7 @@ contract GaugeProxy is ProtocolGovernance
   {
     require(msg.sender == governance, '!gov');
     require(gauges[_token] == address(0x0), 'exists');
-    gauges[_token] = address(new Gauge(_token));
+    gauges[_token] = address(new LiquidityGauge(_token, address(REWARD), address(ESCROW), TREASURY));
     _tokens.push(_token);
   }
 
@@ -140,16 +154,16 @@ contract GaugeProxy is ProtocolGovernance
     require(pid > 0, 'pid not initialized');
     IERC20 _token = TOKEN;
     uint _balance = _token.balanceOf(address(this));
-    _token.safeApprove(address(MASTER), 0);
-    _token.safeApprove(address(MASTER), _balance);
-    MASTER.deposit(pid, _balance);
+    _token.safeApprove(address(DISTRIBUTOR), 0);
+    _token.safeApprove(address(DISTRIBUTOR), _balance);
+    DISTRIBUTOR.deposit(pid, _balance);
   }
 
   // Fetches token
   function collect() public
   {
-    (uint _locked, ) = MASTER.userInfo(pid, address(this));
-    MASTER.withdraw(pid, _locked);
+    (uint _locked, ) = DISTRIBUTOR.userInfo(pid, address(this));
+    DISTRIBUTOR.withdraw(pid, _locked);
     deposit();
   }
 
