@@ -9,3 +9,6 @@ reports/
 !brownie-config.yml
 !environment.yml
 !networks.yml
+
+# ignore visual studio code settings
+.vscode
