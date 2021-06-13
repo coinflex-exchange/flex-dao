@@ -45,7 +45,9 @@ def main():
       return
     ### Transfers some Ether for usage to dev wallet ###
     if chain._chainid == 1337: 
-      accounts[0].transfer(acct, Wei('100 ether').to('wei'))
+      try:
+        accounts[0].transfer(acct, Wei('100 ether').to('wei'))
+      except ValueError: pass
   else:
     print('!! Invalid chainid found.')
     return
