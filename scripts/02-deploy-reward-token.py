@@ -1,15 +1,15 @@
 #!/usr/bin/env python3.7
 # coding:utf-8
 # Copyright (C) 2019-2021 All rights reserved.
-# FILENAME:  deploy-voting-escrow.py
+# FILENAME:  deploy-reward-token.py
 # VERSION: 	 1.0
-# CREATED: 	 2021-06-13 16:25
+# CREATED: 	 2021-06-13 17:37
 # AUTHOR: 	 Aekasitt Guruvanich <sitt@coinflex.com>
 # DESCRIPTION:
 #
 # HISTORY:
 #*************************************************************
-from brownie import accounts, network, Wei, veFLEX
+from brownie import accounts, network, Wei, RewardToken
 from eth_account.account import ValidationError
 from yaml import safe_load
 
@@ -57,33 +57,6 @@ def main():
   if balance == 0:
     return # If balance is zero, exits
 
-  ### Loads Deployment Parameters ###
-  token_addr:str = None
-  name:str       = None
-  symbol:str     = None
-  version:str    = None
-  try:
-    with open('params/voting-escrow.yml', 'rb') as dep:
-      params:dict = safe_load(dep)
-      token_addr  = params.get('token_addr', None)
-      name        = params.get('name', None)
-      symbol      = params.get('symbol', None)
-      version     = params.get('version', None)
-      if token_addr is None or not isinstance(token_addr, str) or len(token_addr) < 1:
-        print(f'{TERM_RED}Invalid `token_addr` parameter found in `params/voting-escrow.yml` file.{TERM_NFMT}')
-        return
-      elif name is None or not isinstance(name, str) or len(name) < 1:
-        print(f'{TERM_RED}Invalid `name` parameter found in `params/voting-escrow.yml` file.{TERM_NFMT}')
-        return
-      elif symbol is None or not isinstance(symbol, str) or len(symbol) < 1:
-        print(f'{TERM_RED}Invalid `symbol` parameter found in `params/voting-escrow.yml` file.{TERM_NFMT}')
-        return
-  except FileNotFoundError:
-    print(f'{TERM_RED}Cannot find `params/voting-escrow.yml` file containing deployment parameters.{TERM_NFMT}')
-    return
-
-  ### Validate token_addr address ###
-
   ### Set Gas Price ##
   gas_station = {
     'fast': 0.000000121,
@@ -92,6 +65,6 @@ def main():
   gas_price = gas_station['standard']
 
   ### Deployment ###
-  limit = veFLEX.deploy.estimate_gas(token_addr, name, symbol, version, { 'from': acct }) * gas_price
-  voting_escrow = veFLEX.deploy(token_addr, name, symbol, version, { 'from': acct, 'gas_limit': limit })
-  print(f'Voting Escrow: { voting_escrow }')
+  limit = RewardToken.deploy.estimate_gas({ 'from': acct }) * gas_price
+  reward_token = RewardToken.deploy({ 'from': acct, 'gas_limit': limit })
+  print(f'Reward Token: { reward_token }')
