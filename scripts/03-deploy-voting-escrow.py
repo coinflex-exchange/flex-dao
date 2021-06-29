@@ -38,7 +38,7 @@ def main():
         mnemonic = content.get('mnemonic', None)
         acct = accounts.from_mnemonic(mnemonic, count=1)
     except FileNotFoundError:
-      print(f'{TERM_RED}Cannot find dev-wallet mnemonic file defined at `wallet.dev.yml`.{TERM_NFMT}')
+      print(f'{TERM_RED}Cannot find wallet mnemonic file defined at `{file_name}`.{TERM_NFMT}')
       return
     except ValidationError:
       print(f'{TERM_RED}Invalid address found in wallet mnemonic file.{TERM_NFMT}')
