@@ -6,7 +6,6 @@ import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/utils/Address.sol';
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import '../interfaces/IVault.sol';
-import '../interfaces/IOneSplitAudit.sol';
 import '../interfaces/IStrategy.sol';
 import '../interfaces/IConverter.sol';
 
@@ -191,11 +190,12 @@ contract Controller
     IStrategy(_strategy).withdraw(_token);
   }
 
-  function getExpectedReturn(address _strategy, address _token, uint256 parts) public view returns (uint256 expected)
+  function getExpectedReturn(address _strategy, address _token, uint256 parts) 
+    public view returns (uint256 expected, uint256[] memory distribution)
   {
     uint256 _balance = IERC20(_token).balanceOf(_strategy);
     address _want = IStrategy(_strategy).want();
-    (expected, ) = IOneSplitAudit(onesplit).getExpectedReturn(_token, _want, _balance, parts, 0);
+    // TODO Re-implement the Get Expected Return function call
   }
 
   // Only allows to withdraw non-core strategy tokens ~ this is over and above normal yield
@@ -216,9 +216,8 @@ contract Controller
       _before = IERC20(_want).balanceOf(address(this));
       IERC20(_token).safeApprove(onesplit, 0);
       IERC20(_token).safeApprove(onesplit, _amount);
-      (_expected, _distribution) = IOneSplitAudit(onesplit)
-        .getExpectedReturn(_token, _want, _amount, parts, 0);
-      IOneSplitAudit(onesplit).swap(_token, _want, _amount, _expected, _distribution, 0);
+      (_expected, _distribution) = this.getExpectedReturn(_token, _want, _amount, parts, 0);
+      // TODO Perform Swap
       _after = IERC20(_want).balanceOf(address(this));
       if (_after > _before) {
         _amount = _after.sub(_before);
