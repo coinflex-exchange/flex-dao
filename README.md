@@ -1,127 +1,74 @@
-# Documentation on FLEX DAO contracts
+# FLEX Decentralized Autonomous Organization Contracts
 
----
+This repo contains the set of Contracts and the tools necessary for testing and deployment.
 
-## RewardToken
+See individual contract descriptions here
 
-Formerly known as PICKLE or YFI;
-The RewardToken is a tool for coordination between contributors, community and associated protocols.
-It was created to decentralize the management and development of yearn products while providing an environment for fast paced innovation.
+* [Controller.sol](./docs/controller.md)
+  * This is the main logic of the Decentralized Autonomous Organization
+* [DAOToken](./docs/daotoken.md)
+* [RewardToken](./docs/reward_token.md)
+* [ProtocolGovernance](./docs/protocol_governance.md)
+* [Timelock](./docs/timelock.md)
 
-### RewardToken Parameters - n/a
+## Contributions
 
-### RewardToken: TODO - rename and deploy
+To begin working on this project, you need to set up the environment using
 
----
+1. Python programming  languange (3.7.2 or above)
+2. [Poetry](https://github.com/python-poetry/poetry), Python dependency management and packaging made easy.
 
-## Distributor
+Simply run this command on your Terminal to check if you have Python installed in your local machine
 
-Formerly known as MasterChef;
-Handles the distribution of reward tokens deployed. Holds tremendous power and therefore has its ownership
-transferred to a governance smart contract once tokens is sufficiently distributed and the community can 
-show to govern itself.
+```bash
+python --version
+# or
+python3 --version
+```
 
-### Distributor: Parameters
+Install Poetry package maanger
 
-reward_token: address pointing to deployed `RewardToken`
-devfund: address (Can be Gnosis MultiSig on Mainnet)
-token_per_block: integer  the rate of reward distribution per block
-start_block: integer the blockheight where the distribution begins
-end_block: integer the blockheight where the distribution ends
+```bash
+pip install -U poetry
+# or
+pip3 install -U poetry
+```
 
-### Distributor: TODO - rename and deploy
+Afterwards, you need the following python libraries
 
----
+1. [Brownie](https://github.com/eth-brownie/brownie), A Python-based development and testing framework for smart contracts targeting the Ethereum Virtual Machine.
+2. [Bip-Utils](https://github.com/ebellocchia/bip_utils), Implementation of BIP39, BIP32, BIP44, BIP49 and BIP84, Monero, Substrate for generation of crypto-currencies wallets (mnemonic phrases, seeds, private/public keys and addresses)
 
-## Controller
+...simply by running the following command
 
-Primary contract for Decentralized Autonomous Organization Contract Infrastructure;
+```bash
+poetry install
+```
 
-### Controller: Parameters
+## Running Tests
 
-* governance: address (Can be Gnosis MultiSig on Mainnet)
-* strategist: address (Can be Gnosis MultiSig on Mainnet)
-* timelock: address pointing at deployed `Timelock` contract
-* devfund: address (Can be Gnosis MultiSig on Mainnet)
-* treasury: address (Can be Gnosis MultiSig on Mainnet)
-* onesplit: address pointing at deployed `OneSplitAudit` or `MockOneSplitAudit`
+If you set-up the workspace correctly, you would also have installed
 
----
+1. [pytest](https://github.com/pytest-dev/pytest), The pytest framework makes it easy to write small tests, yet scales to support complex functional testing
 
-## MockOneSplitAudit
+already listed as development dependencies under poetry configuration.
+All tests can be run using the following command
 
-This is a deployment that mocks basic functionality of 1Inch's OneSplitAudit contract deployed on Ethereum Mainnet. It serves only one function when deployed which is informing the price pre-swapped and facilitating swap for the GaugeProxy. In this demo/mock contract, it assumes that only StableSwapFLEX is available.
+```bash
+pytest
+```
 
-### MockOneSplitAudit: Parameters - n/a
+or individual unit test can be run using the following command
 
-### MockOneSplitAudit: TODO - depending on chain selected, adopt 1Inch’s equivalent contracts or implement Oracle
+```bash
+pytest -k   `<unit_test_name>` 
+```
 
----
+## Deployment
 
-## GaugeProxy
+[TODO] Set up wallet using yaml file
+[TODO] Run deployment scripts under scripts/ directory
 
-Proxy contract pointing to `LiquidityGauge` implementation.
-
-### GaugeProxy: Parameters
-
-* distributor: address pointing to deployed `Distributor`
-* escrow: address pointing to deployed `veFLEX`
-* reward_token: address pointing to deployed `RewardToken`
-* treasury: address (Can be Gnosis MultiSig on Mainnet)
-
-### GaugeProxy: TODO - Deploy
-
----
-
-## LiquidityGauge
-
-The Store and Implementation side of GaugeProxy. This contract handles the reward duration of the staking process.
-
-### LiquidityGauge: Parameters - n/a
-
-### See GaugeProxy for LiquidityGauge’s chained deployment
-
----
-
-## DAOToken
-
-Internal tally for the voting rights of the token holders.
-
-### DAOToken: Parameters - n/a
-
-### See GaugeProxy for DAOToken’s chained deployment
-
----
-
-## ProtocolGovernance
-
-Modifies GaugeProxy to allow for the transfer of governance power with two processes in mind, setting and accepting.
-
-### ProtocolGovernance: Parameters - n/a
-
-### ProtocolGovernance: TODO - n/a
-
----
-
-## Timelock
-
-Simple implementation of a time-locked approval process with immutable duration at point of deployment. Used by Controller contract to adjust convenience fee in a transparent manner.
-
-### Timelock: Parameters
-
-* admin: address of the contract deployer or someone with the administrative right to queue, cancel and execute transactions from the timelock contract (to set convenience fee on the controller)
-* delay: integer  duration in blockheight between minimum (2 days) and maximum (30 days) to time-lock the transaction queue
-
----
-
-## Strategies and Vaults
-
-Accompanying contracts to be listed on the GaugeProxy and assigned ownership and fund movement powers to the Controller contract. These two, coupled as one, represent a Proposal made to the DAO and can be selected and voted upon by DAOToken holders, contributors and community
-
-### Strategies and Vaults: Parameters
-
-varies among contracts. Can be LiquidityPool focused like Yearn and Pickle or Token Listing focused like ShapeShift
-
-* [See: Strategy Risks](https://docs.yearn.finance/resources/risks/strategy-risks)
-* [See: Vault Risks](https://docs.yearn.finance/resources/risks/vault-risks)
-* [See: Proposal Process](https://docs.yearn.finance/governance/proposal-process)
+```bash
+brownie run ...
+```
