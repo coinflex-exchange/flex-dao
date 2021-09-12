@@ -17,6 +17,10 @@ from pytest import mark
 ### Local Modules ###
 from . import *
 
+@fixture
+def deploy_reward_token(admin: Account) -> RewardToken:
+  return RewardToken.deploy({ 'from': admin })
+
 @mark.parametrize('gas_speed', ('fast', 'standard'))
 def test_deploy_reward_token(admin: Account, gas_price: dict, gas_speed: str):
   '''
