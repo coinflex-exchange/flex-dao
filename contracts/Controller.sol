@@ -216,7 +216,7 @@ contract Controller
       _before = IERC20(_want).balanceOf(address(this));
       IERC20(_token).safeApprove(onesplit, 0);
       IERC20(_token).safeApprove(onesplit, _amount);
-      (_expected, _distribution) = this.getExpectedReturn(_token, _want, _amount, parts, 0);
+      (_expected, _distribution) = this.getExpectedReturn(_want, _token, parts); //_token 
       // TODO Perform Swap
       _after = IERC20(_want).balanceOf(address(this));
       if (_after > _before) {
