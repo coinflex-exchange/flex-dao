@@ -14,10 +14,7 @@ contract Controller
   using SafeERC20 for IERC20;
   using Address for address;
   using SafeMath for uint256;
-  address public onesplit;
   address public governance;
-  address public strategist;
-  address public devfund;
   address public treasury;
   address public timelock;
 
@@ -35,24 +32,12 @@ contract Controller
   uint256 public constant max = 10000;
   constructor(
     address _governance,
-    address _strategist,
     address _timelock,
-    address _devfund,
-    address _treasury,
-    address _onesplit
+    address _treasury
   ) {
     governance = _governance;
-    strategist = _strategist;
     timelock = _timelock;
-    devfund = _devfund;
     treasury = _treasury;
-    onesplit = _onesplit;
-  }
-
-  function setDevFund(address _devfund) public
-  {
-    require(msg.sender == governance, '!governance');
-    devfund = _devfund;
   }
 
   function setTreasury(address _treasury) public
@@ -61,23 +46,12 @@ contract Controller
     treasury = _treasury;
   }
 
-  function setStrategist(address _strategist) public
-  {
-    require(msg.sender == governance, '!governance');
-    strategist = _strategist;
-  }
 
   function setSplit(uint256 _split) public
   {
     require(msg.sender == governance, '!governance');
     require(_split <= max, 'numerator cannot be greater than denominator');
     split = _split;
-  }
-
-  function setOneSplit(address _onesplit) public
-  {
-    require(msg.sender == governance, '!governance');
-    onesplit = _onesplit;
   }
 
   function setGovernance(address _governance) public
@@ -94,9 +68,7 @@ contract Controller
 
   function setVault(address _token, address _vault) public
   {
-    require(msg.sender == strategist || msg.sender == governance,
-      '!strategist'
-    );
+    require(msg.sender == governance, '!governance');
     require(vaults[_token] == address(0), 'vault');
     vaults[_token] = _vault;
   }
@@ -134,9 +106,7 @@ contract Controller
 
   function setStrategy(address _token, address _strategy) public
   {
-    require(msg.sender == strategist || msg.sender == governance,
-      '!strategist'
-    );
+    require(msg.sender == governance, '!governance');
     require(approvedStrategies[_token][_strategy] == true, '!approved');
     address _current = strategies[_token];
     if (_current != address(0)) {
@@ -167,26 +137,20 @@ contract Controller
 
   function withdrawAll(address _token) public
   {
-    require(msg.sender == strategist || msg.sender == governance,
-      '!strategist'
-    );
+    require(msg.sender == governance, '!governance');
     IStrategy(strategies[_token]).withdrawAll();
   }
 
   function inCaseTokensGetStuck(address _token, uint256 _amount) public
   {
-    require(msg.sender == strategist || msg.sender == governance,
-      '!governance'
-    );
+    require(msg.sender == governance, '!governance');
     IERC20(_token).safeTransfer(msg.sender, _amount);
   }
 
   function inCaseStrategyTokenGetStuck(address _strategy, address _token)
     public
   {
-    require(msg.sender == strategist || msg.sender == governance,
-      '!governance'
-    );
+    require(msg.sender == governance, '!governance');
     IStrategy(_strategy).withdraw(_token);
   }
 
@@ -201,9 +165,7 @@ contract Controller
   // Only allows to withdraw non-core strategy tokens ~ this is over and above normal yield
   function harvest(address _strategy, address _token, uint256 parts) public
   {
-    require(msg.sender == strategist || msg.sender == governance,
-      '!governance'
-    );
+    require(msg.sender == governance, '!governance');
     // This contract should never have value in it, but just incase since this is a public call
     uint256 _before = IERC20(_token).balanceOf(address(this));
     IStrategy(_strategy).withdraw(_token);
@@ -214,8 +176,6 @@ contract Controller
       uint256[] memory _distribution;
       uint256 _expected;
       _before = IERC20(_want).balanceOf(address(this));
-      IERC20(_token).safeApprove(onesplit, 0);
-      IERC20(_token).safeApprove(onesplit, _amount);
       (_expected, _distribution) = this.getExpectedReturn(_want, _token, parts); //_token 
       // TODO Perform Swap
       _after = IERC20(_want).balanceOf(address(this));
@@ -280,7 +240,6 @@ contract Controller
       convenienceFeeMax
     );
     if (_convenienceFee > 1) {
-      IERC20(_fromVaultToken).safeTransfer(devfund, _convenienceFee.div(2));
       IERC20(_fromVaultToken).safeTransfer(treasury, _convenienceFee.div(2));
     }
     // Executes sequence of logic
