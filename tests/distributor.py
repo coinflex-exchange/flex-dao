@@ -51,6 +51,9 @@ def test_deploy_distributor(admin: Account, \
   
   ---
   :param: admin  `Account`  the wallet address to deploy the contract from  
+  :param: token_per_block  `int`  the amount of tokens to be distributed per block
+  :param: start_block  `int`  the beginning block to begin distribution  
+  :param: end_block  `int`  the ending block to be stop distribution  
   :param: gas_price  `dict`  the mock gas_price object as it would be like to receive from Gas Station API  
   :param: gas_speed  `str`  the mock speed key to be used with gas_price object; either `fast` or `standard`  
   :param: deploy_reward_token  `RewardToken`  the deployed RewardToken contract
