@@ -13,7 +13,7 @@
 from brownie import Distributor, RewardToken
 ### Third-Party Packages ###
 from eth_account import Account
-from pytest import mark
+from pytest import fixture, mark
 ### Local Modules ###
 from . import *
 from .reward_token import deploy_reward_token
@@ -35,7 +35,7 @@ def deploy_distributor(admin: Account, deploy_reward_token: RewardToken) -> Dist
   token_per_block: int      = 1
   start_block: int          = 0
   end_block: int            = 10
-  return Distributor.deploy(reward_token, devfund, token_per_block, start_block, end_block, { 'from': admin, })
+  return Distributor.deploy(reward_token, devfund, token_per_block, start_block, end_block, { 'from': admin })
 
 @mark.parametrize('token_per_block, start_block, end_block, gas_speed', (
   ( 1,  0,  10,     'fast'), 
