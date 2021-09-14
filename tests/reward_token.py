@@ -22,6 +22,10 @@ from . import *
 def deploy_reward_token(admin: Account) -> RewardToken:
   '''
   FIXTURE: Return deployed RewardToken contract to be used by other contract testing
+
+  ---
+  :param: admin  `Account`  the wallet address to deploy the contract from  
+  :returns: `RewardToken`
   '''
   return RewardToken.deploy({ 'from': admin })
 
