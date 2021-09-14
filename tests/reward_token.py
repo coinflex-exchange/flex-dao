@@ -20,6 +20,9 @@ from . import *
 
 @fixture
 def deploy_reward_token(admin: Account) -> RewardToken:
+  '''
+  FIXTURE: Return deployed RewardToken contract to be used by other contract testing
+  '''
   return RewardToken.deploy({ 'from': admin })
 
 @mark.parametrize('gas_speed', ('fast', 'standard'))
