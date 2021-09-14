@@ -12,6 +12,7 @@
 ### Project Contracts ###
 from brownie import DAOToken
 ### Third-Party Packages ###
+from brownie.network.gas.strategies import GasNowStrategy
 from eth_account import Account
 from pytest import fixture, mark
 ### Local Modules ###
@@ -29,7 +30,7 @@ def deploy_daotoken(admin: Account) -> DAOToken:
   return DAOToken.deploy({ 'from': admin })
 
 @mark.parametrize('gas_speed', ('fast', 'standard'))
-def test_deploy_daotoken(admin: Account, gas_price: dict, gas_speed: str):
+def test_deploy_daotoken(admin: Account, gas_speed: str):
   '''
   TEST: Deploy DAOToken Contract
   
@@ -39,6 +40,6 @@ def test_deploy_daotoken(admin: Account, gas_price: dict, gas_speed: str):
   :param: gas_speed  `str`  the mock speed key to be used with gas_price object; either `fast` or `standard`  
   '''
   ### Deployment ###
-  limit: int         = DAOToken.deploy.estimate_gas({ 'from': admin }) * gas_price[gas_speed]
-  daotoken: DAOToken = DAOToken.deploy({ 'from': admin, 'gas_limit': limit })
+  gas_strategy       = GasNowStrategy(gas_speed)
+  daotoken: DAOToken = DAOToken.deploy({ 'from': admin, 'gas_price': gas_strategy })
   print(f'DAOToken: { daotoken }')

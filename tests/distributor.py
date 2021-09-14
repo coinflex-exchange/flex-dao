@@ -12,6 +12,7 @@
 ### Project Contracts ###
 from brownie import Distributor, RewardToken
 ### Third-Party Packages ###
+from brownie.network.gas.strategies import GasNowStrategy
 from eth_account import Account
 from pytest import fixture, mark
 ### Local Modules ###
@@ -45,7 +46,7 @@ def deploy_distributor(admin: Account, deploy_reward_token: RewardToken) -> Dist
 ))
 def test_deploy_distributor(admin: Account, \
   token_per_block: int, start_block: int, end_block: int, \
-    gas_price: dict, gas_speed: str, deploy_reward_token: RewardToken):
+    gas_speed: str, deploy_reward_token: RewardToken):
   '''
   TEST: Deploy Distributor Contract
   
@@ -54,13 +55,12 @@ def test_deploy_distributor(admin: Account, \
   :param: token_per_block  `int`  the amount of tokens to be distributed per block
   :param: start_block  `int`  the beginning block to begin distribution  
   :param: end_block  `int`  the ending block to be stop distribution  
-  :param: gas_price  `dict`  the mock gas_price object as it would be like to receive from Gas Station API  
   :param: gas_speed  `str`  the mock speed key to be used with gas_price object; either `fast` or `standard`  
   :param: deploy_reward_token  `RewardToken`  the deployed RewardToken contract
   '''
   reward_token: RewardToken = deploy_reward_token
   devfund: Account          = admin
   ### Deployment ###
-  limit = Distributor.deploy.estimate_gas(reward_token, devfund, token_per_block, start_block, end_block, { 'from': admin }) * gas_price[gas_speed]
-  distributor = Distributor.deploy(reward_token, devfund, token_per_block, start_block, end_block, { 'from': admin, 'gas_limit': limit })
+  gas_strategy = GasNowStrategy(gas_speed)
+  distributor  = Distributor.deploy(reward_token, devfund, token_per_block, start_block, end_block, { 'from': admin, 'gas_price': gas_strategy })
   print(f'Distributor: { distributor }')

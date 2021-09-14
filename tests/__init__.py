@@ -17,7 +17,6 @@ from brownie.network import accounts
 from eth_account import Account
 from pytest import fixture
 from yaml import safe_load
-
 ### ANSI Coloring ###
 BLUE: str  = '\033[1;34m'
 RED: str   = '\033[1;31m'
@@ -68,7 +67,3 @@ def treasury() -> Account:
   Loads test Treasury account using `wallet.treasury.yml` found on root-folder
   '''
   return load_account('wallet.treasury.yml')
-
-@fixture
-def gas_price() -> dict:
-  return { 'fast': 0.000000480, 'standard': 0.000000064 }
