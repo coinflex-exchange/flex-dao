@@ -27,7 +27,8 @@ def deploy_daotoken(admin: Account) -> DAOToken:
   :param: admin  `Account`  the wallet address to deploy the contract from  
   :returns:  `DAOToken`  
   '''
-  return DAOToken.deploy({ 'from': admin })
+  gas_strategy = GasNowStrategy('fast')
+  return DAOToken.deploy({ 'from': admin, 'gas_price': gas_strategy })
 
 @mark.parametrize('gas_speed', ('fast', 'standard'))
 def test_deploy_daotoken(admin: Account, gas_speed: str):
@@ -36,7 +37,6 @@ def test_deploy_daotoken(admin: Account, gas_speed: str):
   
   ---
   :param: admin  `Account`  the wallet address to deploy the contract from  
-  :param: gas_price  `dict`  the mock gas_price object as it would be like to receive from Gas Station API  
   :param: gas_speed  `str`  the mock speed key to be used with gas_price object; either `fast` or `standard`  
   '''
   ### Deployment ###
