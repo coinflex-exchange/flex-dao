@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/security/Pausable.sol';
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
-import './lib/pausable.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 
-contract StakingRewards is ReentrancyGuard, Pausable {
+contract StakingRewards is Ownable, ReentrancyGuard, Pausable {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
@@ -29,8 +30,7 @@ contract StakingRewards is ReentrancyGuard, Pausable {
 
   /* ========== CONSTRUCTOR ========== */
 
-  constructor(address _owner, address _rewardsToken, address _stakingToken)
-    Owned(_owner)
+  constructor(address _rewardsToken, address _stakingToken)
   {
     rewardsToken = IERC20(_rewardsToken);
     stakingToken = IERC20(_stakingToken);
@@ -85,7 +85,7 @@ contract StakingRewards is ReentrancyGuard, Pausable {
   function stake(uint256 amount)
     external
     nonReentrant
-    notPaused
+    whenNotPaused
     updateReward(msg.sender)
   {
     require(amount > 0, 'Cannot stake 0');
