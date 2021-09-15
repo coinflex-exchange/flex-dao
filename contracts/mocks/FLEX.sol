@@ -6,9 +6,9 @@ import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 contract DAOToken {
   using SafeMath for uint;
   /// @notice EIP-20 token name for this token
-  string public constant name = 'DAO TOKEN';
+  string public constant name = 'FLEX Coin';
   /// @notice EIP-20 token symbol for this token
-  string public constant symbol = 'fTOKEN';
+  string public constant symbol = 'FLEX';
   /// @notice EIP-20 token decimals for this token
   uint8 public constant decimals = 18;
   /// @notice Total number of tokens in circulation
