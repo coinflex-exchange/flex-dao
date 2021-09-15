@@ -21,7 +21,7 @@ from .timelock import deploy_timelock
 
 @fixture
 def deploy_controller(admin: Account, \
-  governance: Account, treasury: Account, deploy_timelock: Timelock):
+  governance: Account, treasury: Account, deploy_timelock: Timelock) -> Controller:
   '''
   FIXTURE: Returns deployed Controller contract to be used by other contract testing.
   '''
