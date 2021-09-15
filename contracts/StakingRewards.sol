@@ -38,19 +38,27 @@ contract StakingRewards is Ownable, ReentrancyGuard, Pausable {
 
   /* ========== VIEWS ========== */
 
-  function totalSupply() external view returns(uint256) {
+  function totalSupply()
+    external view returns(uint256)
+  {
     return _totalSupply;
   }
 
-  function balanceOf(address account) external view returns(uint256) {
+  function balanceOf(address account)
+    external view returns(uint256)
+  {
     return _balances[account];
   }
 
-  function lastTimeRewardApplicable() public view returns(uint256) {
+  function lastTimeRewardApplicable()
+    public view returns(uint256)
+  {
     return min(block.timestamp, periodFinish);
   }
 
-  function rewardPerToken() public view returns(uint256) {
+  function rewardPerToken()
+    public view returns(uint256)
+  {
     if (_totalSupply == 0) {
       return rewardPerTokenStored;
     }
@@ -64,7 +72,9 @@ contract StakingRewards is Ownable, ReentrancyGuard, Pausable {
     );
   }
 
-  function earned(address account) public view returns(uint256) {
+  function earned(address account)
+    public view returns(uint256)
+  {
     return
     _balances[account]
       .mul(rewardPerToken().sub(userRewardPerTokenPaid[account]))
@@ -72,21 +82,22 @@ contract StakingRewards is Ownable, ReentrancyGuard, Pausable {
       .add(rewards[account]);
   }
 
-  function getRewardForDuration() external view returns(uint256) {
+  function getRewardForDuration()
+    external view returns(uint256)
+  {
     return rewardRate.mul(rewardsDuration);
   }
 
-  function min(uint256 a, uint256 b) public pure returns(uint256) {
+  function min(uint256 a, uint256 b)
+    public pure returns(uint256)
+  {
     return a < b ? a : b;
   }
 
   /* ========== MUTATIVE FUNCTIONS ========== */
 
   function stake(uint256 amount)
-    external
-    nonReentrant
-    whenNotPaused
-    updateReward(msg.sender)
+    external nonReentrant whenNotPaused updateReward(msg.sender)
   {
     require(amount > 0, 'Cannot stake 0');
     _totalSupply = _totalSupply.add(amount);
@@ -126,9 +137,7 @@ contract StakingRewards is Ownable, ReentrancyGuard, Pausable {
   /* ========== RESTRICTED FUNCTIONS ========== */
 
   function notifyRewardAmount(uint256 reward)
-    external
-    onlyOwner
-    updateReward(address(0))
+    external onlyOwner updateReward(address(0))
   {
     if (block.timestamp >= periodFinish) {
       rewardRate = reward.div(rewardsDuration);
@@ -152,8 +161,7 @@ contract StakingRewards is Ownable, ReentrancyGuard, Pausable {
 
   // Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders
   function recoverERC20(address tokenAddress, uint256 tokenAmount)
-    external
-    onlyOwner
+    external onlyOwner
   {
     // Cannot recover the staking token or the rewards token
     require(
@@ -177,6 +185,7 @@ contract StakingRewards is Ownable, ReentrancyGuard, Pausable {
   }
 
   /* ========== Pausable  ========== */
+
   function pause()
     external onlyOwner
   {
