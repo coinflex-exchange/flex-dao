@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.7
 # coding:utf-8
 # Copyright (C) 2019-2021 All rights reserved.
-# FILENAME:  tests/daotoken.py
+# FILENAME:  tests/flex.py
 # VERSION: 	 1.0
 # CREATED: 	 2021-09-03 14:07
 # AUTHOR: 	 Aekasitt Guruvanich <sitt@coinflex.com>
@@ -10,7 +10,7 @@
 # HISTORY:
 #*************************************************************
 ### Project Contracts ###
-from brownie import DAOToken
+from brownie import flex
 ### Third-Party Packages ###
 from brownie.network.gas.strategies import GasNowStrategy
 from eth_account import Account
@@ -19,21 +19,21 @@ from pytest import fixture, mark
 from . import *
 
 @fixture
-def deploy_daotoken(admin: Account) -> DAOToken:
+def deploy_flex(admin: Account) -> flex:
   '''
-  FIXTURE: Deploy a DAOToken contract to be used by other contracts' testing.  
+  FIXTURE: Deploy a flex contract to be used by other contracts' testing.  
 
   ---
   :param: admin  `Account`  the wallet address to deploy the contract from  
-  :returns:  `DAOToken`  
+  :returns:  `flex`  
   '''
   gas_strategy = GasNowStrategy('fast')
-  return DAOToken.deploy({ 'from': admin, 'gas_price': gas_strategy })
+  return flex.deploy({ 'from': admin, 'gas_price': gas_strategy })
 
 @mark.parametrize('gas_speed', ('fast', 'standard'))
-def test_deploy_daotoken(admin: Account, gas_speed: str):
+def test_deploy_flex(admin: Account, gas_speed: str):
   '''
-  TEST: Deploy DAOToken Contract
+  TEST: Deploy flex Contract
   
   ---
   :param: admin  `Account`  the wallet address to deploy the contract from  
@@ -41,5 +41,5 @@ def test_deploy_daotoken(admin: Account, gas_speed: str):
   '''
   ### Deployment ###
   gas_strategy       = GasNowStrategy(gas_speed)
-  daotoken: DAOToken = DAOToken.deploy({ 'from': admin, 'gas_price': gas_strategy })
-  print(f'DAOToken: { daotoken }')
+  flex: flex = flex.deploy({ 'from': admin, 'gas_price': gas_strategy })
+  print(f'flex: { flex }')

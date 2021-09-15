@@ -10,46 +10,46 @@
 # HISTORY:
 #*************************************************************
 ### Project Contracts ###
-from brownie import DAOToken, RewardToken, StakingRewards
+from brownie import flex, RewardToken, StakingRewards
 ### Third-Party Packages ###
 from brownie.network.gas.strategies import GasNowStrategy
 from eth_account import Account
 from pytest import fixture, mark
 ### Local Modules ###
 from . import *
-from .daotoken import deploy_daotoken
+from .flex import deploy_flex
 from .reward_token import deploy_reward_token
 
 @fixture
-def deploy_staking_rewards(admin: Account, deploy_daotoken: DAOToken, deploy_reward_token: RewardToken) -> StakingRewards:
+def deploy_staking_rewards(admin: Account, deploy_flex: flex, deploy_reward_token: RewardToken) -> StakingRewards:
   '''
-  FIXTURE: Returns a StakingRewards contract given DAOToken and RewardToken to be used by other contracts' testing.  
+  FIXTURE: Returns a StakingRewards contract given flex and RewardToken to be used by other contracts' testing.  
 
   ---
   :param: admin  `Account`  the wallet address to deploy the contract from  
-  :param: deploy_daotoken  `DAOToken`  generic ERC-20 to serve as the Staking Token  
+  :param: deploy_flex  `flex`  generic ERC-20 to serve as the Staking Token  
   :param: deploy_reward_token  `RewardToken`  ERC-20 compliant Reward Token to be given out as rewards  
   :returns:  `StakingRewards`  
   '''
-  daotoken     = deploy_daotoken
+  flex     = deploy_flex
   reward_token = deploy_reward_token
   gas_strategy = GasNowStrategy('fast')
-  return StakingRewards.deploy(reward_token, daotoken, { 'from': admin, 'gas_price': gas_strategy })
+  return StakingRewards.deploy(reward_token, flex, { 'from': admin, 'gas_price': gas_strategy })
 
 @mark.parametrize('gas_speed', ('fast', 'standard'))
-def test_deploy_staking_rewards(admin: Account,  deploy_daotoken: DAOToken, deploy_reward_token: RewardToken, gas_speed: str):
+def test_deploy_staking_rewards(admin: Account,  deploy_flex: flex, deploy_reward_token: RewardToken, gas_speed: str):
   '''
-  TEST: Deploy a StakingRewards contract given DAOToken and RewardToken
+  TEST: Deploy a StakingRewards contract given flex and RewardToken
 
   ---
   :param: admin  `Account`  the wallet address to deploy the contract from  
-  :param: deploy_daotoken  `DAOToken`  generic ERC-20 to serve as the Staking Token  
+  :param: deploy_flex  `flex`  generic ERC-20 to serve as the Staking Token  
   :param: deploy_reward_token  `RewardToken`  ERC-20 compliant Reward Token to be given out as rewards  
   :param: gas_speed  `str`  the mock speed key to be used with gas_price object; either `fast` or `standard`  
   '''
-  daotoken     = deploy_daotoken
+  flex     = deploy_flex
   reward_token = deploy_reward_token
   gas_strategy = GasNowStrategy(gas_speed)
   ### Deployment ###
-  staking_rewards: StakingRewards = StakingRewards.deploy(reward_token, daotoken, { 'from': admin, 'gas_price': gas_strategy })
+  staking_rewards: StakingRewards = StakingRewards.deploy(reward_token, flex, { 'from': admin, 'gas_price': gas_strategy })
   print(f'StakingRewards: { staking_rewards }')
