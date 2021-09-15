@@ -19,9 +19,9 @@ from pytest import mark
 from . import *
 from .controller import deploy_controller
 from .flex import deploy_flex
-from .reward_token import deploy_reward_token # used by deploy_staking_rewards
 from .staking_rewards import deploy_staking_rewards
 from .timelock import deploy_timelock
+from .ve_flex import deploy_ve_flex # used by deploy_staking_rewards
 
 @fixture
 def test_deploy_flex_staking_strategy(admin: Account, governance: Account, \
