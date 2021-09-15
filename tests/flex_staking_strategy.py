@@ -10,7 +10,7 @@
 # HISTORY:
 #*************************************************************
 ### Project Contracts ###
-from brownie import FLEXStakingStrategy, Controller, flex, StakingRewards, Timelock
+from brownie import FLEXStakingStrategy, Controller, FLEXCoin, StakingRewards, Timelock
 ### Third-Party Packages ###
 from brownie.network.gas.strategies import GasNowStrategy
 from eth_account import Account
@@ -25,7 +25,7 @@ from .timelock import deploy_timelock
 
 @fixture
 def test_deploy_flex_staking_strategy(admin: Account, governance: Account, \
-  deploy_flex: flex, deploy_controller: Controller, \
+  deploy_flex: FLEXCoin, deploy_controller: Controller, \
     deploy_staking_rewards: StakingRewards, deploy_timelock: Timelock) -> FLEXStakingStrategy:
   '''
   FIXTURE: Returns a deployed FLEXStakingStrategy contract using given Controller (DAO), Timelock, 
@@ -34,7 +34,7 @@ def test_deploy_flex_staking_strategy(admin: Account, governance: Account, \
   ---
   :param: admin  `Account`  the wallet address to deploy the contract from  
   :param: governance  `Account`  the wallet address defined as DAO Controller governance  
-  :param: deploy_flex  `flex`  a generic ERC-20 Token used as want for the given Strategy; Preferably FLEX  
+  :param: deploy_flex  `FLEXCoin`  a generic ERC-20 Token used as want for the given Strategy; Preferably FLEX  
   :param: deploy_controller  `Controller`  the main contract of the DAO  
   :param: deploy_staking_rewards  `StakingRewards`  a deployed StakingRewards contract denoting ratio and reward due to users  
   :param: deploy_timelock  `Timelock`  a deployed Timelock contract to limit the distribution of RewardToken  
@@ -50,7 +50,7 @@ def test_deploy_flex_staking_strategy(admin: Account, governance: Account, \
 
 @mark.parametrize('gas_speed', ('standard', 'fast'))
 def test_deploy_flex_staking_strategy(admin: Account, governance: Account, \
-  deploy_flex: flex, deploy_controller: Controller, \
+  deploy_flex: FLEXCoin, deploy_controller: Controller, \
     deploy_staking_rewards: StakingRewards, deploy_timelock: Timelock, gas_speed: str):
   '''
   TEST: Deploy a FLEXStakingStrategy contract using given Controller (DAO), Timelock, StakingRewards and use flex as want
@@ -58,7 +58,7 @@ def test_deploy_flex_staking_strategy(admin: Account, governance: Account, \
   ---
   :param: admin  `Account`  the wallet address to deploy the contract from  
   :param: governance  `Account`  the wallet address defined as DAO Controller governance  
-  :param: deploy_flex  `flex`  a generic ERC-20 Token used as want for the given Strategy; Preferably FLEX  
+  :param: deploy_flex  `FLEXCoin`  a generic ERC-20 Token used as want for the given Strategy; Preferably FLEX  
   :param: deploy_controller  `Controller`  the main contract of the DAO  
   :param: deploy_staking_rewards  `StakingRewards`  a deployed StakingRewards contract denoting ratio and reward due to users  
   :param: deploy_timelock  `Timelock`  a deployed Timelock contract to limit the distribution of RewardToken  
