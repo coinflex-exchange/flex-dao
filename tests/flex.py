@@ -42,4 +42,4 @@ def test_deploy_flex(admin: Account, gas_speed: str):
   ### Deployment ###
   gas_strategy   = GasNowStrategy(gas_speed)
   flex: FLEXCoin = FLEXCoin.deploy({ 'from': admin, 'gas_price': gas_strategy })
-  print(f'flex: { flex }')
+  print(f'FLEXCoin: { flex }')
