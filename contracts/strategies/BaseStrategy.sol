@@ -7,7 +7,6 @@ import '@openzeppelin/contracts/utils/Address.sol';
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 
 import '../../interfaces/IVault.sol';
-// import '../interfaces/staking-rewards.sol';
 import '../../interfaces/IDistributor.sol';
 import '../../interfaces/IController.sol';
 
