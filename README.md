@@ -4,13 +4,19 @@ This repo contains the set of Contracts and the tools necessary for testing and 
 
 See individual contract descriptions here
 
-* [Controller.sol](./docs/controller.md)
-  * This is the main logic of the Decentralized Autonomous Organization
-* [DAOToken](./docs/daotoken.md)
-* [RewardToken](./docs/reward_token.md)
-* [ProtocolGovernance](./docs/protocol_governance.md)
-* [Timelock](./docs/timelock.md)
-
+>
+> |-- [Controller.sol](./docs/controller.md)  This is the main logic of the Decentralized Autonomous Organization  
+> |-- [fVault.sol](./docs/fvault.md)  
+> |-- [Timelock.sol](./docs/timelock.md)  
+> |-- [Strategies](./docs/strategies.md)  Tells you where to find original documentation on Strategies and Vaults  
+> &nbsp;&nbsp;|--[BaseStrategy.sol](./docs/strategies/base_strategy.md)  
+> &nbsp;&nbsp;|--[BaseStakingStrategy.sol](./docs/strategies/base_staking_strategy.md)  
+> &nbsp;&nbsp;|--[FLEXStakingStrategy.sol](./docs/strategies/flex_staking_strategy.md)  
+> |-- [StakingRewards.sol](./docs/staking_rewards.md)  This is where the staking rewards rate for the staking strategy is calculated.  
+> Mocks  these are contracts that are not meant to be deployed or tested by this repo  
+> ---  
+> &nbsp;&nbsp;|-- [FLEX.sol](./docs/mocks/flex.md)  
+> &nbsp;  
 ## Contributions
 
 To begin working on this project, you need to set up the environment using
