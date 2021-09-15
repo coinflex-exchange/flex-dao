@@ -161,7 +161,7 @@ contract StakingRewards is Ownable, ReentrancyGuard, Pausable {
       tokenAddress != address(rewardsToken),
       'Cannot withdraw the staking or rewards tokens'
     );
-    IERC20(tokenAddress).safeTransfer(owner, tokenAmount);
+    IERC20(tokenAddress).safeTransfer(owner(), tokenAmount);
     emit Recovered(tokenAddress, tokenAmount);
   }
 
