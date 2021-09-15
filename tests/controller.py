@@ -19,6 +19,16 @@ from pytest import fixture, mark
 from . import *
 from .timelock import deploy_timelock
 
+@fixture
+def deploy_controller(admin: Account, \
+  governance: Account, treasury: Account, deploy_timelock: Timelock):
+  '''
+  FIXTURE: Returns deployed Controller contract to be used by other contract testing.
+  '''
+  timelock     = deploy_timelock
+  gas_strategy = GasNowStrategy('fast')
+  return Controller.deploy(governance, timelock, treasury, { 'from': admin, 'gas_price': gas_strategy })
+
 @mark.parametrize('gas_speed', ('standard', 'fast'))
 def test_deploy_controller(admin: Account, \
   governance: Account, treasury: Account, \
