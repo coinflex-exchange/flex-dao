@@ -154,40 +154,6 @@ contract Controller
     IStrategy(_strategy).withdraw(_token);
   }
 
-  function getExpectedReturn(address _strategy, address _token, uint256 parts) 
-    public view returns (uint256 expected, uint256[] memory distribution)
-  {
-    uint256 _balance = IERC20(_token).balanceOf(_strategy);
-    address _want = IStrategy(_strategy).want();
-    // TODO Re-implement the Get Expected Return function call
-  }
-
-  // Only allows to withdraw non-core strategy tokens ~ this is over and above normal yield
-  function harvest(address _strategy, address _token, uint256 parts) public
-  {
-    require(msg.sender == governance, '!governance');
-    // This contract should never have value in it, but just incase since this is a public call
-    uint256 _before = IERC20(_token).balanceOf(address(this));
-    IStrategy(_strategy).withdraw(_token);
-    uint256 _after = IERC20(_token).balanceOf(address(this));
-    if (_after > _before) {
-      uint256 _amount = _after.sub(_before);
-      address _want = IStrategy(_strategy).want();
-      uint256[] memory _distribution;
-      uint256 _expected;
-      _before = IERC20(_want).balanceOf(address(this));
-      (_expected, _distribution) = this.getExpectedReturn(_want, _token, parts); //_token 
-      // TODO Perform Swap
-      _after = IERC20(_want).balanceOf(address(this));
-      if (_after > _before) {
-        _amount = _after.sub(_before);
-        uint256 _treasury = _amount.mul(split).div(max);
-        earn(_want, _amount.sub(_treasury));
-        IERC20(_want).safeTransfer(treasury, _treasury);
-      }
-    }
-  }
-
   function withdraw(address _token, uint256 _amount) public
   {
     require(msg.sender == vaults[_token], '!vault');
