@@ -7,19 +7,16 @@ import './BaseStakingStrategy.sol';
 
 abstract contract FLEXStakingStrategy is BaseStakingStrategy {
   using SafeERC20 for IERC20;
-  // FLEX
-  address public flex;
 
   constructor(
-    address _flex,
     address _rewards,
+    address _want, // FLEX
     address _governance,
     address _controller,
     address _timelock
   )
-    BaseStakingStrategy(_rewards, _governance, _controller, _timelock)
+    BaseStakingStrategy(_rewards, _want, _governance, _controller, _timelock)
   {
-    flex = _flex;
   }
 
   // **** State Mutations ****
@@ -33,11 +30,11 @@ abstract contract FLEXStakingStrategy is BaseStakingStrategy {
 
     // Collects veFLEX tokens
     IStakingRewards(rewards).getReward();
-    uint256 _flexBal = IERC20(flex).balanceOf(address(this));
+    uint256 _flexBal = IERC20(want).balanceOf(address(this));
     if (_flexBal > 0) {
-      IERC20(flex).safeTransfer(
+      IERC20(want).safeTransfer(
         IController(controller).treasury(),
-        IERC20(flex).balanceOf(address(this))
+        IERC20(want).balanceOf(address(this))
       );
     }
 
