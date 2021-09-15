@@ -13,8 +13,7 @@ import './RewardToken.sol';
 // will be transferred to a governance smart contract once tokens is sufficiently
 // distributed and the community can show to govern itself.
 
-contract Distributor
-is Ownable
+contract Distributor is Ownable
 {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
