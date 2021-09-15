@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 
-contract DAOToken {
+contract FLEXCoin {
   using SafeMath for uint;
   /// @notice EIP-20 token name for this token
   string public constant name = 'FLEX Coin';
