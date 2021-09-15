@@ -5,7 +5,7 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import './BaseStakingStrategy.sol';
 
-abstract contract FLEXStakingStrategy is BaseStakingStrategy {
+contract FLEXStakingStrategy is BaseStakingStrategy {
   using SafeERC20 for IERC20;
 
   constructor(
@@ -17,6 +17,12 @@ abstract contract FLEXStakingStrategy is BaseStakingStrategy {
   )
     BaseStakingStrategy(_rewards, _want, _governance, _controller, _timelock)
   {
+  }
+
+  // **** Views ****
+
+  function getName() external override pure returns (string memory) {
+    return 'FLEXStakingStrategy';
   }
 
   // **** State Mutations ****
