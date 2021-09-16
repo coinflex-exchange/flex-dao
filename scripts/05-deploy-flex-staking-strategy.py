@@ -1,16 +1,16 @@
 #!/usr/bin/env python3.7
 # coding:utf-8
 # Copyright (C) 2019-2021 All rights reserved.
-# FILENAME:  deploy-timelock.py
+# FILENAME:  deploy-flex-staking-strategy.py
 # VERSION: 	 1.0
-# CREATED: 	 2021-06-09 15:40
+# CREATED: 	 2021-09-16 14:00
 # AUTHOR: 	 Aekasitt Guruvanich <sitt@coinflex.com>
 # DESCRIPTION:
 #
 # HISTORY:
 #*************************************************************
 ### Project Contract(s) ###
-from brownie import Timelock
+from brownie import Controller, FLEXStakingStrategy, StakingRewards, Timelock
 ### Third-Party Packages ###
 from brownie.convert import Wei
 from brownie.network import accounts, Chain
@@ -63,31 +63,45 @@ def main(gas_speed: str = 'standard'):
     return # If balance is zero, exits
 
   ### Loads Deployment Parameters ###
-  admin:str = None
-  delay:int = None
+  rewards: str    = None
+  want: str       = None
+  governance: str = None
+  controller: str = None
+  timelock: str   = None
   try:
-    with open('params/timelock.yml', 'rb') as dep:
-      params:dict = safe_load(dep)
-      admin       = params.get('admin', None)
-      delay       = params.get('delay', None)
-      if admin is None or not isinstance(admin, str) or len(admin) < 1:
-        print(f'{TERM_RED}Invalid `admin` parameter found in `params/timelock.yml` file.{TERM_NFMT}')
+    with open('params/flex-staking-strategy.yml', 'rb') as dep:
+      params: dict = safe_load(dep)
+      rewards      = params.get('rewards', None)
+      want         = params.get('want', None)
+      governance   = params.get('governance', None)
+      controller   = params.get('controller', None)
+      timelock     = params.get('timelock', None)
+      if rewards is None or not isinstance(rewards, str) or len(rewards) < 1:
+        print(f'{TERM_RED}Invalid `rewards` parameter found in `params/flex-staking-strategy.yml` file.{TERM_NFMT}')
         return
-      elif delay is None or not isinstance(delay, int) or delay < 0:
-        print(f'{TERM_RED}Invalid `delay` parameter found in `params/timelock.yml` file.{TERM_NFMT}')
+      elif want is None or not isinstance(want, str) or len(want) < 1:
+        print(f'{TERM_RED}Invalid `want` parameter found in `params/flex-staking-strategy.yml` file.{TERM_NFMT}')
+        return
+      elif governance is None or not isinstance(governance, str) or len(governance) < 1:
+        print(f'{TERM_RED}Invalid `governance` parameter found in `params/flex-staking-strategy.yml` file.{TERM_NFMT}')
+        return
+      elif controller is None or not isinstance(controller, str) or len(controller) < 1:
+        print(f'{TERM_RED}Invalid `controller` parameter found in `params/flex-staking-strategy.yml` file.{TERM_NFMT}')
+        return
+      elif timelock is None or not isinstance(timelock, str) or len(timelock) < 1:
+        print(f'{TERM_RED}Invalid `timelock` parameter found in `params/flex-staking-strategy.yml` file.{TERM_NFMT}')
         return
   except FileNotFoundError:
-    print(f'{TERM_RED}Cannot find `params/timelock.yml` file containing deployment parameters.{TERM_NFMT}')
+    print(f'{TERM_RED}Cannot find `params/staking_rewards.yml` file containing deployment parameters.{TERM_NFMT}')
     return
 
-  ### Validate admin address ###
-
-  ### Convert `delay` parameters from days to to seconds units
-  delay_seconds = delay * 24 * 60 * 60
+  ### Validate Parameters ###
+  staking_rewards: StakingRewards = StakingRewards.at(rewards)
+  controller: Controller          = Controller.at(controller)
+  timelock: Timelock              = Timelock.at(timelock)
 
   ### Set Gas Price ##
   gas_strategy = GasNowStrategy(gas_speed)
 
   ### Deployment ###
-  timelock = Timelock.deploy(admin, delay_seconds, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'Timelock: { timelock }')
+  strategy = FLEXStakingStrategy.deploy(staking_rewards, want, governance, controller, timelock, { 'from': acct, 'gas_price': gas_strategy })

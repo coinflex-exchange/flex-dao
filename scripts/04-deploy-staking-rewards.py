@@ -1,25 +1,30 @@
 #!/usr/bin/env python3.7
 # coding:utf-8
 # Copyright (C) 2019-2021 All rights reserved.
-# FILENAME:  deploy-reward-token.py
+# FILENAME:  deploy-staking-rewards.py
 # VERSION: 	 1.0
-# CREATED: 	 2021-06-13 17:37
+# CREATED: 	 2021-06-13 18:01
 # AUTHOR: 	 Aekasitt Guruvanich <sitt@coinflex.com>
 # DESCRIPTION:
 #
 # HISTORY:
 #*************************************************************
-from brownie import accounts, network, Wei, RewardToken
-from eth_account.account import ValidationError
+### Project Contract(s) ###
+from brownie import fVault, StakingRewards
+### Third-Party Packages ###
+from brownie.convert import Wei
+from brownie.network import accounts, Chain
+from brownie.network.gas.strategies import GasNowStrategy
+from eth_account.account import Account, ValidationError
 from yaml import safe_load
 
 TERM_RED  = '\033[1;31m'
 TERM_NFMT = '\033[0;0m'
 
-def main():
+def main(gas_speed: str = 'standard'):
   ### Load Account to use ###
-  acct = None
-  chain = network.Chain()
+  acct: Account = None
+  chain: Chain  = Chain()
   print(f'Network Chain-ID: { chain }')
   chain_map = {
     1: None,              # mainnet
@@ -57,14 +62,29 @@ def main():
   if balance == 0:
     return # If balance is zero, exits
 
+  ### Loads Deployment Parameters ###
+  reward_token: str   = None
+  staking_token: str  = None
+  try:
+    with open('params/staking_rewards.yml', 'rb') as dep:
+      params:dict     = safe_load(dep)
+      reward_token    = params.get('reward_token', None)
+      staking_token   = params.get('staking_token', None)
+      if reward_token is None or not isinstance(reward_token, str) or len(reward_token) < 1:
+        print(f'{TERM_RED}Invalid `reward_token` parameter found in `params/staking_rewards.yml` file.{TERM_NFMT}')
+        return
+      elif staking_token is None or not isinstance(staking_token, str) or len(staking_token) < 1:
+        print(f'{TERM_RED}Invalid `staking_token` parameter found in `params/staking_rewards.yml` file.{TERM_NFMT}')
+        return
+  except FileNotFoundError:
+    print(f'{TERM_RED}Cannot find `params/staking_rewards.yml` file containing deployment parameters.{TERM_NFMT}')
+    return
+
+  ### Validate Parameters ###
+  vested_token: fVault = fVault.at(reward_token)
+
   ### Set Gas Price ##
-  gas_station = {
-    'fast': 0.000000121,
-    'standard': 0.000000064
-  }
-  gas_price = gas_station['standard']
+  gas_strategy = GasNowStrategy(gas_speed)
 
   ### Deployment ###
-  limit = RewardToken.deploy.estimate_gas({ 'from': acct }) * gas_price
-  reward_token = RewardToken.deploy({ 'from': acct, 'gas_limit': limit })
-  print(f'Reward Token: { reward_token }')
+  staking_rewards = StakingRewards.deploy(vested_token, staking_token, { 'from': acct, 'gas_price': gas_strategy })
