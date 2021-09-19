@@ -83,9 +83,9 @@ contract RewardShare is Ownable
     uint256 amount = 0;
     for (uint256 i = claimedEpoches[owner]; i <= endingEpoch; i++) {
       uint256 epochStartTime = getEpochStartTime(i);
-      uint256 totalSupply = dill.totalSupply(epochStartTime);
+      uint256 totalSupply = vested.totalSupply(epochStartTime);
       if (totalSupply > 0) {
-        amount += feesForEpoch[i].mul(dill.balanceOf(owner, epochStartTime)).div(totalSupply);
+        amount += feesForEpoch[i].mul(vested.balanceOf(owner, epochStartTime)).div(totalSupply);
       }
     }
     return amount;
