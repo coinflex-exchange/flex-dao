@@ -7,6 +7,7 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
+import '../interfaces/IVested.sol';
 
 contract StakingRewards is Ownable, ReentrancyGuard, Pausable {
   using SafeMath for uint256;
@@ -14,7 +15,7 @@ contract StakingRewards is Ownable, ReentrancyGuard, Pausable {
 
   /* ========== STATE VARIABLES ========== */
 
-  IERC20 public rewardsToken;
+  IVested public rewardsToken;
   IERC20 public stakingToken;
   uint256 public periodFinish = 0;
   uint256 public rewardRate = 0;
@@ -32,7 +33,7 @@ contract StakingRewards is Ownable, ReentrancyGuard, Pausable {
 
   constructor(address _rewardsToken, address _stakingToken)
   {
-    rewardsToken = IERC20(_rewardsToken);
+    rewardsToken = IVested(_rewardsToken);
     stakingToken = IERC20(_stakingToken);
   }
 
@@ -122,7 +123,7 @@ contract StakingRewards is Ownable, ReentrancyGuard, Pausable {
     uint256 reward = rewards[msg.sender];
     if (reward > 0) {
       rewards[msg.sender] = 0;
-      rewardsToken.safeTransfer(msg.sender, reward);
+      rewardsToken.deposit_for(msg.sender, reward);
       emit RewardPaid(msg.sender, reward);
     }
   }
