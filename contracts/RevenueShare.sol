@@ -17,7 +17,7 @@ contract RevenueShare is Ownable
   IVested public vested; // veFLEX
   uint256 public constant epoch_period = 604800; // a week in seconds
   uint256 public startTime;
-  uint256[] public feesForEpoch;
+  uint256[] public revenueForEpoch;
   mapping(address => uint256) public claimedEpoches;
   mapping(address => bool) public isDistributor;
 
@@ -50,11 +50,11 @@ contract RevenueShare is Ownable
   function distribute(uint256 amount) external {
     // require(msg.sender == owner() || isDistributor[msg.sender], "distributor not authorized!");
     token.safeTransferFrom(msg.sender, address(this), amount);
-    feesForEpoch.push(amount);
+    revenueForEpoch.push(amount);
   }
 
   function currentEpoch() public view returns(uint256) {
-    return feesForEpoch.length;
+    return revenueForEpoch.length;
   }
 
   function claim(address owner) external {
@@ -85,7 +85,7 @@ contract RevenueShare is Ownable
       uint256 epochStartTime = getEpochStartTime(i);
       uint256 totalSupply = vested.totalSupply(epochStartTime);
       if (totalSupply > 0) {
-        amount += feesForEpoch[i].mul(vested.balanceOf(owner, epochStartTime)).div(totalSupply);
+        amount += revenueForEpoch[i].mul(vested.balanceOf(owner, epochStartTime)).div(totalSupply);
       }
     }
     return amount;
