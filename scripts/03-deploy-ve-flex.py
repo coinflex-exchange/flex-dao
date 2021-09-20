@@ -10,7 +10,7 @@
 # HISTORY:
 #*************************************************************
 ### Project Contract(s) ###
-from brownie import fVault
+from brownie import veFLEX
 ### Third-Party Packages ###
 from brownie.convert import Wei
 from brownie.network import accounts, Chain
@@ -63,28 +63,28 @@ def main(gas_speed: str = 'standard'):
     return # If balance is zero, exits
 
   ### Loads Deployment Parameters ###
-  token: str      = None
-  governance: str = None
-  timelock: str   = None
-  controller: str = None
+  token: str   = None
+  name: str    = None
+  symbol: str  = None
+  version: str = None
   try:
     with open('params/ve-flex.yml', 'rb') as dep:
-      params:dict = safe_load(dep)
-      token       = params.get('token', None)
-      governance  = params.get('governance', None)
-      timelock    = params.get('timelock', None)
-      controller  = params.get('controller', None)
+      params: dict = safe_load(dep)
+      token        = params.get('token', None)
+      name         = params.get('name', None)
+      symbol       = params.get('symbol', None)
+      version      = params.get('version', None)
       if token is None or not isinstance(token, str) or len(token) < 1:
         print(f'{TERM_RED}Invalid `token` parameter found in `params/ve-flex.yml` file.{TERM_NFMT}')
         return
-      elif governance is None or not isinstance(governance, str) or len(governance) < 1:
-        print(f'{TERM_RED}Invalid `governance` parameter found in `params/ve-flex.yml` file.{TERM_NFMT}')
+      elif name is None or not isinstance(name, str) or len(name) < 1:
+        print(f'{TERM_RED}Invalid `name` parameter found in `params/ve-flex.yml` file.{TERM_NFMT}')
         return
-      elif timelock is None or not isinstance(timelock, str) or len(timelock) < 1:
-        print(f'{TERM_RED}Invalid `timelock` parameter found in `params/ve-flex.yml` file.{TERM_NFMT}')
+      elif symbol is None or not isinstance(symbol, str) or len(symbol) < 1:
+        print(f'{TERM_RED}Invalid `symbol` parameter found in `params/ve-flex.yml` file.{TERM_NFMT}')
         return
-      elif controller is None or not isinstance(controller, str) or len(controller) < 1:
-        print(f'{TERM_RED}Invalid `treasury` parameter found in `params/ve-flex.yml` file.{TERM_NFMT}')
+      elif version is None or not isinstance(version, str) or len(version) < 1:
+        print(f'{TERM_RED}Invalid `version` parameter found in `params/ve-flex.yml` file.{TERM_NFMT}')
         return
   except FileNotFoundError:
     print(f'{TERM_RED}Cannot find `params/ve-flex.yml` file containing deployment parameters.{TERM_NFMT}')
@@ -94,5 +94,5 @@ def main(gas_speed: str = 'standard'):
   gas_strategy = GasNowStrategy(gas_speed)
 
   ### Deployment ###
-  ve_flex = fVault.deploy(token, governance, timelock, controller, { 'from': acct, 'gas_price': gas_strategy })
+  ve_flex = veFLEX.deploy(token, name, symbol, version, { 'from': acct, 'gas_price': gas_strategy })
   print(f'veFLEX: { ve_flex }')
