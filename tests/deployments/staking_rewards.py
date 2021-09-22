@@ -1,56 +1,55 @@
 #!/usr/bin/env python3.7
 # coding:utf-8
 # Copyright (C) 2019-2021 All rights reserved.
-# FILENAME:  tests/revenue_share.py
+# FILENAME:  tests/staking_rewards.py
 # VERSION: 	 1.0
-# CREATED: 	 2021-09-21 12:03
+# CREATED: 	 2021-09-03 14:07
 # AUTHOR: 	 Aekasitt Guruvanich <sitt@coinflex.com>
 # DESCRIPTION:
 #
 # HISTORY:
 #*************************************************************
 ### Project Contracts ###
-from brownie import FLEXCoin, RevenueShare, veFLEX
+from brownie import FLEXCoin, veFLEX, StakingRewards
 ### Third-Party Packages ###
 from brownie.network.gas.strategies import GasNowStrategy
 from eth_account import Account
 from pytest import fixture, mark
 ### Local Modules ###
-from . import *
+from tests import *
 from .flex import deploy_flex
 from .ve_flex import deploy_ve_flex
 
 @fixture
-def deploy_revenue_share(admin: Account, deploy_flex: FLEXCoin, deploy_ve_flex: veFLEX) -> RevenueShare:
+def deploy_staking_rewards(admin: Account, deploy_flex: FLEXCoin, deploy_ve_flex: veFLEX) -> StakingRewards:
   '''
-  FIXTURE: Deploy a RevenueShare contract to be used by other contracts' testing.  
+  FIXTURE: Returns a StakingRewards contract given flex and RewardToken to be used by other contracts' testing.  
 
   ---
   :param: admin  `Account`  the wallet address to deploy the contract from  
   :param: deploy_flex  `FLEXCoin`  generic ERC-20 to serve as the Staking Token  
-  :param: deploy_ve_flex  `veFLEX`  vested balance token for given token  
-  :returns:  `RevenueShare`  
+  :param: deploy_ve_flex  `veFLEX`  ERC-20 compliant Reward Token to be given out as rewards  
+  :returns:  `StakingRewards`  
   '''
   flex: FLEXCoin  = deploy_flex
   ve_flex: veFLEX = deploy_ve_flex
   gas_strategy    = GasNowStrategy('fast')
-  ### Deployment ###
-  return RevenueShare.deploy(flex, ve_flex, { 'from': admin, 'gas_price': gas_strategy })
+  return StakingRewards.deploy(ve_flex, flex, { 'from': admin, 'gas_price': gas_strategy })
 
 @mark.parametrize('gas_speed', ('fast', 'standard'))
-def test_deploy_revenue_share(admin: Account, deploy_flex: FLEXCoin, deploy_ve_flex: veFLEX, gas_speed: str):
+def test_deploy_staking_rewards(admin: Account,  deploy_flex: FLEXCoin, deploy_ve_flex: veFLEX, gas_speed: str):
   '''
-  TEST: Deploy RevenueShare Contract
-  
+  TEST: Deploy a StakingRewards contract given flex and RewardToken
+
   ---
   :param: admin  `Account`  the wallet address to deploy the contract from  
   :param: deploy_flex  `FLEXCoin`  generic ERC-20 to serve as the Staking Token  
-  :param: deploy_ve_flex  `veFLEX`  vested balance token for given token  
+  :param: deploy_ve_flex  `veFLEX`  ERC-20 compliant Reward Token to be given out as rewards  
   :param: gas_speed  `str`  the mock speed key to be used with gas_price object; either `fast` or `standard`  
   '''
-  flex: FLEXCoin              = deploy_flex
-  ve_flex: veFLEX             = deploy_ve_flex
-  gas_strategy                = GasNowStrategy(gas_speed)
+  flex: FLEXCoin  = deploy_flex
+  ve_flex: veFLEX = deploy_ve_flex
+  gas_strategy    = GasNowStrategy(gas_speed)
   ### Deployment ###
-  revenue_share: RevenueShare = RevenueShare.deploy(flex, ve_flex, { 'from': admin, 'gas_price': gas_strategy })
-  print(f'RevenueShare: { revenue_share }')
+  staking_rewards: StakingRewards = StakingRewards.deploy(ve_flex, flex, { 'from': admin, 'gas_price': gas_strategy })
+  print(f'StakingRewards: { staking_rewards }')

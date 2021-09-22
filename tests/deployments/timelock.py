@@ -17,7 +17,7 @@ from brownie.exceptions import VirtualMachineError
 from eth_account import Account
 from pytest import mark, raises
 ### Local Modules ###
-from . import *
+from tests import *
 
 @fixture
 def deploy_timelock(admin: Account) -> Timelock:

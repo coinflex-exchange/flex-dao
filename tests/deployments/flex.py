@@ -16,7 +16,7 @@ from brownie.network.gas.strategies import GasNowStrategy
 from eth_account import Account
 from pytest import fixture, mark
 ### Local Modules ###
-from . import *
+from tests import *
 
 @fixture
 def deploy_flex(admin: Account) -> FLEXCoin:

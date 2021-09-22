@@ -16,7 +16,7 @@ from brownie.network.gas.strategies import GasNowStrategy
 from eth_account import Account
 from pytest import mark
 ### Local Modules ###
-from . import *
+from tests import *
 from .controller import deploy_controller
 from .flex import deploy_flex
 from .staking_rewards import deploy_staking_rewards
