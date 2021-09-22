@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.7
 # coding:utf-8
 # Copyright (C) 2019-2021 All rights reserved.
-# FILENAME:  tests/revenue_share.py
+# FILENAME:  tests/deployments/revenue_share.py
 # VERSION: 	 1.0
 # CREATED: 	 2021-09-21 12:03
 # AUTHOR: 	 Aekasitt Guruvanich <sitt@coinflex.com>

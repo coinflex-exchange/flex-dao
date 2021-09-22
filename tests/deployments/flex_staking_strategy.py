@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.7
 # coding:utf-8
 # Copyright (C) 2019-2021 All rights reserved.
-# FILENAME:  tests/flex_staking_strategy.py
+# FILENAME:  tests/deployments/flex_staking_strategy.py
 # VERSION: 	 1.0
 # CREATED: 	 2021-09-15 15:40
 # AUTHOR: 	 Aekasitt Guruvanich <sitt@coinflex.com>
