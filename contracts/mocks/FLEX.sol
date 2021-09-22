@@ -12,7 +12,7 @@ contract FLEXCoin {
   /// @notice EIP-20 token decimals for this token
   uint8 public constant decimals = 18;
   /// @notice Total number of tokens in circulation
-  uint public totalSupply = 1e18;
+  uint public totalSupply = 1e24;
   mapping(address => mapping(address => uint)) internal allowances;
   mapping(address => uint) internal balances;
   /// @notice The standard EIP-20 transfer event
@@ -22,8 +22,8 @@ contract FLEXCoin {
 
   constructor()
   {
-    balances[msg.sender] = 1e18;
-    emit Transfer(address(0x0), msg.sender, 1e18);
+    balances[msg.sender] = 1e24;
+    emit Transfer(address(0x0), msg.sender, 1e24);
   }
 
   /**
