@@ -37,7 +37,7 @@ def main():
   }
   words_num = word_name_map.get(args.num, Bip39WordsNum.WORDS_NUM_12)
   print(f'Word Count: {words_num}')
-  mnemonic = Bip39MnemonicGenerator.FromWordsNumber(words_num)
+  mnemonic = Bip39MnemonicGenerator().FromWordsNumber(words_num)
   print(f'Mnemonic: {mnemonic}')
   account = accounts.from_mnemonic(mnemonic, count=1)
   print(f'Wallet Address: {account.address}')
