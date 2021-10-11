@@ -48,7 +48,7 @@ contract RevenueShare is Ownable
   }
 
   function distribute(uint256 amount) external {
-    // require(msg.sender == owner() || isDistributor[msg.sender], "distributor not authorized!");
+    require(msg.sender == owner() || isDistributor[msg.sender], "distributor not authorized!");
     token.safeTransferFrom(msg.sender, address(this), amount);
     revenueForEpoch.push(amount);
   }
