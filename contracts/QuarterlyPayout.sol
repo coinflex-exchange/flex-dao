@@ -7,7 +7,7 @@ import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import '../interfaces/IVested.sol';
 
-contract RevenueShare is Ownable
+contract QuarterlyPayout is Ownable
 {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
@@ -15,7 +15,7 @@ contract RevenueShare is Ownable
   /* =========  MEMBER VARS ========== */
   IERC20  public token;  // FLEX token
   IVested public vested; // veFLEX
-  uint256 public constant epoch_period = 604800; // a week in seconds
+  uint256 public constant epoch_period = 7862400; // 13 weeks in seconds
   uint256 public startTime;
   uint256[] public revenueForEpoch;
   mapping(address => uint256) public claimedEpoches;
