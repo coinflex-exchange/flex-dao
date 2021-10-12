@@ -49,6 +49,7 @@ contract QuarterlyPayout is Ownable
 
   function distribute(uint256 amount) external {
     require(msg.sender == owner() || isDistributor[msg.sender], "distributor not authorized!");
+    require(amount > 0, "amount to be distributed must be greater than zero!");
     token.safeTransferFrom(msg.sender, address(this), amount);
     revenueForEpoch.push(amount);
   }
