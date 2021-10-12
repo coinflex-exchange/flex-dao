@@ -17,7 +17,7 @@ contract QuarterlyPayout is Ownable
   IVested public vested; // veFLEX
   uint256 public constant epoch_period = 7862400; // 13 weeks in seconds
   uint256 public startTime;
-  uint256[] public revenueForEpoch;
+  uint256[] public payoutForEpoch;
   mapping(address => uint256) public claimedEpoches;
   mapping(address => bool) public isDistributor;
 
@@ -51,11 +51,11 @@ contract QuarterlyPayout is Ownable
     require(msg.sender == owner() || isDistributor[msg.sender], "distributor not authorized!");
     require(amount > 0, "amount to be distributed must be greater than zero!");
     token.safeTransferFrom(msg.sender, address(this), amount);
-    revenueForEpoch.push(amount);
+    payoutForEpoch.push(amount);
   }
 
   function currentEpoch() public view returns(uint256) {
-    return revenueForEpoch.length;
+    return payoutForEpoch.length;
   }
 
   function claim(address owner) external {
@@ -86,7 +86,7 @@ contract QuarterlyPayout is Ownable
       uint256 epochStartTime = getEpochStartTime(i);
       uint256 totalSupply = vested.totalSupply(epochStartTime);
       if (totalSupply > 0) {
-        amount += revenueForEpoch[i].mul(vested.balanceOf(owner, epochStartTime)).div(totalSupply);
+        amount += payoutForEpoch[i].mul(vested.balanceOf(owner, epochStartTime)).div(totalSupply);
       }
     }
     return amount;
