@@ -27,7 +27,7 @@ from tests.deployments.ve_flex import deploy_ve_flex # Used by deploy_daily_payo
 
 @mark.parametrize('gas_speed', ('standard', 'fast'))
 def test_distribute_calls(admin: Account, deploy_flex: FLEXCoin, deploy_daily_payout: DailyPayout, gas_speed: str):
-  epochs: int           = 50
+  epochs: int           = 1
   flex: FLEXCoin        = deploy_flex
   payout: DailyPayout   = deploy_daily_payout
   flex_balance: Decimal = flex.balanceOf(admin)
@@ -49,7 +49,7 @@ def test_claim_calls(admin: Account, user_accounts: List[Account], deploy_flex: 
   gas_strategy          = GasNowStrategy(gas_speed)
   ### Execute ###
   for _ in range(epochs):
-    txn = payout.distribute(payout_per_epoch, { 'from': admin, 'gas_speed': gas_strategy })
+    payout.distribute(payout_per_epoch, { 'from': admin, 'gas_speed': gas_strategy })
     print(f'Current Epoch: { payout.currentEpoch() }')
   ### Vest ###
   claimant     = user_accounts[0]
@@ -60,5 +60,5 @@ def test_claim_calls(admin: Account, user_accounts: List[Account], deploy_flex: 
   print(f'veFLEX Balance: { ve_flex.balanceOf(claimant) }')
   ### Claim ###
   for _ in range(epochs):
-    txn = payout.claim(claimant, { 'from': claimant })
-    print(txn)
+    claimable: Decimal = payout.getClaimable(claimant)#, { 'from': claimant, 'gas_price': gas_strategy })
+    print(claimable)
