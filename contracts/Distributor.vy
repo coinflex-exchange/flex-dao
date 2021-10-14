@@ -45,7 +45,7 @@ def distribute():
   @notice Ensures non-zero balance before executing distribute(_amount) on a payout contract with entire balance.
   '''
   assert msg.sender == self.admin, 'You are not the admin'         # dev: admin only
-  flex_balance: uint256 = ERC20(FLEX).balanceOf(self)
+  flex_balance: uint256 = ERC20(self.flex).balanceOf(self)
   assert flex_balance > 0, 'You must transfer more than zero FLEX' # dev: insufficient balance
   PayoutContract(self.payout).distribute(flex_balance)
 
