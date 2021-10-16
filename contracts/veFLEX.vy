@@ -1,13 +1,14 @@
-# @version ^0.2.16
+# @version ^0.2.4
 '''
-@title Voting Escrow
+@title CoinFLEX Voting Escrow
 @author CoinFLEX
 @license MIT
 @notice Votes have a weight depending on time, so that users are
-    committed to the future of (whatever they are voting for)
+        committed to the future of (whatever they are voting for)
 @dev Vote weight decays linearly over time. Lock time cannot be
      more than `MAXTIME` (4 years).
 '''
+
 # Voting escrow to have time-weighted votes
 # Votes have a weight depending on time, so that users are committed
 # to the future of (whatever they are voting for).
@@ -19,21 +20,20 @@
 #   |  /
 #   |/
 # 0 +--------+------> time
-#     maxtime (4 years?)
+#       maxtime (4 years?)
 
+### Structs ###
 struct Point:
   bias: int128
   slope: int128  # - dweight / dt
   ts: uint256
   blk: uint256  # block
-# We cannot really do block numbers per se b/c slope is per time, not per block
-# and per block could be fairly bad b/c Ethereum changes blocktimes.
-# What we can do is to extrapolate ***At functions
 
 struct LockedBalance:
   amount: int128
   end: uint256
 
+### Interface ###
 interface ERC20:
   def decimals() -> uint256: view
   def name() -> String[64]: view
@@ -49,12 +49,13 @@ interface ERC20:
 interface SmartWalletChecker:
   def check(addr: address) -> bool: nonpayable
 
-#### Constants ###
+### Constants ###
 DEPOSIT_FOR_TYPE: constant(int128) = 0
 CREATE_LOCK_TYPE: constant(int128) = 1
 INCREASE_LOCK_AMOUNT: constant(int128) = 2
 INCREASE_UNLOCK_TIME: constant(int128) = 3
 
+### Events ###
 event CommitOwnership:
   admin: address
 
@@ -83,7 +84,9 @@ MULTIPLIER: constant(uint256) = 10 ** 18
 
 token: public(address)
 supply: public(uint256)
+
 locked: public(HashMap[address, LockedBalance])
+
 epoch: public(uint256)
 point_history: public(Point[100000000000000000000000000000])  # epoch -> unsigned point
 user_point_history: public(HashMap[address, Point[1000000000]])  # user -> Point[user_epoch]
@@ -93,6 +96,7 @@ slope_changes: public(HashMap[uint256, int128])  # time -> signed slope change
 # Aragon's view methods for compatibility
 controller: public(address)
 transfersEnabled: public(bool)
+
 name: public(String[64])
 symbol: public(String[32])
 version: public(String[32])
@@ -102,6 +106,7 @@ decimals: public(uint256)
 # The goal is to prevent tokenizing the escrow
 future_smart_wallet_checker: public(address)
 smart_wallet_checker: public(address)
+
 admin: public(address)  # Can and will be a smart contract
 future_admin: public(address)
 
@@ -109,7 +114,7 @@ future_admin: public(address)
 def __init__(token_addr: address, _name: String[64], _symbol: String[32], _version: String[32]):
   '''
   @notice Contract constructor
-  @param token_addr `ERC20CRV` token address
+  @param token_addr `DAOToken` token address
   @param _name Token name
   @param _symbol Token symbol
   @param _version Contract version - required for Aragon compatibility
@@ -120,12 +125,15 @@ def __init__(token_addr: address, _name: String[64], _symbol: String[32], _versi
   self.point_history[0].ts = block.timestamp
   self.controller = msg.sender
   self.transfersEnabled = True
+
   _decimals: uint256 = ERC20(token_addr).decimals()
   assert _decimals <= 255
   self.decimals = _decimals
+
   self.name = _name
   self.symbol = _symbol
   self.version = _version
+
 
 @external
 def commit_transfer_ownership(addr: address):
@@ -137,6 +145,7 @@ def commit_transfer_ownership(addr: address):
   self.future_admin = addr
   log CommitOwnership(addr)
 
+
 @external
 def apply_transfer_ownership():
   '''
@@ -147,6 +156,7 @@ def apply_transfer_ownership():
   assert _admin != ZERO_ADDRESS  # dev: admin not set
   self.admin = _admin
   log ApplyOwnership(_admin)
+
 
 @external
 def commit_smart_wallet_checker(addr: address):
@@ -176,7 +186,7 @@ def assert_not_contract(addr: address):
     if checker != ZERO_ADDRESS:
       if SmartWalletChecker(checker).check(addr):
         return
-    raise "Smart contract depositors not allowed"
+    raise 'Smart contract depositors not allowed'
 
 @external
 @view
@@ -343,6 +353,7 @@ def _deposit_for(_addr: address, _value: uint256, unlock_time: uint256, locked_b
   log Deposit(_addr, _value, _locked.end, type, block.timestamp)
   log Supply(supply_before, supply_before + _value)
 
+
 @external
 def checkpoint():
   '''
@@ -356,14 +367,14 @@ def deposit_for(_addr: address, _value: uint256):
   '''
   @notice Deposit `_value` tokens for `_addr` and add to the lock
   @dev Anyone (even a smart contract) can deposit for someone else, but
-       cannot extend their locktime and deposit for a brand new user
+        cannot extend their locktime and deposit for a brand new user
   @param _addr User's wallet address
   @param _value Amount to add to user's lock
   '''
   _locked: LockedBalance = self.locked[_addr]
   assert _value > 0  # dev: need non-zero value
-  assert _locked.amount > 0, "No existing lock found"
-  assert _locked.end > block.timestamp, "Cannot add to expired lock. Withdraw"
+  assert _locked.amount > 0, 'No existing lock found'
+  assert _locked.end > block.timestamp, 'Cannot add to expired lock. Withdraw'
   self._deposit_for(_addr, _value, 0, self.locked[_addr], DEPOSIT_FOR_TYPE)
 
 @external
@@ -378,9 +389,9 @@ def create_lock(_value: uint256, _unlock_time: uint256):
   unlock_time: uint256 = (_unlock_time / WEEK) * WEEK  # Locktime is rounded down to weeks
   _locked: LockedBalance = self.locked[msg.sender]
   assert _value > 0  # dev: need non-zero value
-  assert _locked.amount == 0, "Withdraw old tokens first"
-  assert unlock_time > block.timestamp, "Can only lock until time in the future"
-  assert unlock_time <= block.timestamp + MAXTIME, "Voting lock can be 4 years max"
+  assert _locked.amount == 0, 'Withdraw old tokens first'
+  assert unlock_time > block.timestamp, 'Can only lock until time in the future'
+  assert unlock_time <= block.timestamp + MAXTIME, 'Voting lock can be 4 years max'
   self._deposit_for(msg.sender, _value, unlock_time, _locked, CREATE_LOCK_TYPE)
 
 @external
@@ -388,14 +399,14 @@ def create_lock(_value: uint256, _unlock_time: uint256):
 def increase_amount(_value: uint256):
   '''
   @notice Deposit `_value` additional tokens for `msg.sender`
-      without modifying the unlock time
+          without modifying the unlock time
   @param _value Amount of tokens to deposit and add to the lock
   '''
   self.assert_not_contract(msg.sender)
   _locked: LockedBalance = self.locked[msg.sender]
   assert _value > 0  # dev: need non-zero value
-  assert _locked.amount > 0, "No existing lock found"
-  assert _locked.end > block.timestamp, "Cannot add to expired lock. Withdraw"
+  assert _locked.amount > 0, 'No existing lock found'
+  assert _locked.end > block.timestamp, 'Cannot add to expired lock. Withdraw'
   self._deposit_for(msg.sender, _value, 0, _locked, INCREASE_LOCK_AMOUNT)
 
 @external
@@ -408,10 +419,10 @@ def increase_unlock_time(_unlock_time: uint256):
   self.assert_not_contract(msg.sender)
   _locked: LockedBalance = self.locked[msg.sender]
   unlock_time: uint256 = (_unlock_time / WEEK) * WEEK  # Locktime is rounded down to weeks
-  assert _locked.end > block.timestamp, "Lock expired"
-  assert _locked.amount > 0, "Nothing is locked"
-  assert unlock_time > _locked.end, "Can only increase lock duration"
-  assert unlock_time <= block.timestamp + MAXTIME, "Voting lock can be 4 years max"
+  assert _locked.end > block.timestamp, 'Lock expired'
+  assert _locked.amount > 0, 'Nothing is locked'
+  assert unlock_time > _locked.end, 'Can only increase lock duration'
+  assert unlock_time <= block.timestamp + MAXTIME, 'Voting lock can be 4 years max'
   self._deposit_for(msg.sender, 0, unlock_time, _locked, INCREASE_UNLOCK_TIME)
 
 @external
@@ -422,7 +433,7 @@ def withdraw():
   @dev Only possible if the lock has expired
   '''
   _locked: LockedBalance = self.locked[msg.sender]
-  assert block.timestamp >= _locked.end, "The lock didn't expire"
+  assert block.timestamp >= _locked.end, 'The lock didn\'t expire'
   value: uint256 = convert(_locked.amount, uint256)
   old_locked: LockedBalance = _locked
   _locked.end = 0
@@ -441,6 +452,7 @@ def withdraw():
 # The following ERC20/minime-compatible methods are not real balanceOf and supply!
 # They measure the weights for the purpose of voting, so they don't represent
 # real coins.
+
 @internal
 @view
 def find_block_epoch(_block: uint256, max_epoch: uint256) -> uint256:
@@ -590,12 +602,3 @@ def totalSupplyAt(_block: uint256) -> uint256:
       dt = (_block - point.blk) * (block.timestamp - point.ts) / (block.number - point.blk)
   # Now dt contains info on how far are we beyond point
   return self.supply_at(point, point.ts + dt)
-
-# Dummy methods for compatibility with Aragon
-@external
-def changeController(_newController: address):
-  '''
-  @dev Dummy method required for Aragon compatibility
-  '''
-  assert msg.sender == self.controller
-  self.controller = _newController
