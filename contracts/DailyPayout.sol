@@ -18,6 +18,7 @@ contract DailyPayout is Ownable
   uint256 public constant epoch_period = 86400; // 24 hours in seconds
   uint256 public startTime;
   uint256[] public payoutForEpoch;
+  uint256[] public blocknumberForEpoch;
   mapping(address => uint256) public claimedEpoches;
   mapping(address => bool) public isDistributor;
 
@@ -52,6 +53,7 @@ contract DailyPayout is Ownable
     require(amount > 0, "amount to be distributed must be greater than zero!");
     token.safeTransferFrom(msg.sender, address(this), amount);
     payoutForEpoch.push(amount);
+    blocknumberForEpoch.push(block.number);
   }
 
   function currentEpoch() public view returns(uint256) {
@@ -84,9 +86,11 @@ contract DailyPayout is Ownable
     uint256 amount = 0;
     for (uint256 i = claimedEpoches[owner]; i <= endingEpoch; i++) {
       uint256 epochStartTime = getEpochStartTime(i);
-      uint256 totalSupply = vested.totalSupply(epochStartTime);
+      //uint256 totalSupply = vested.totalSupply(epochStartTime);
+      uint256 totalSupply = vested.totalSupplyAt(blocknumberForEpoch[i]);
       if (totalSupply > 0) {
-        amount += payoutForEpoch[i].mul(vested.balanceOf(owner, epochStartTime)).div(totalSupply);
+        //amount += payoutForEpoch[i].mul(vested.balanceOf(owner, epochStartTime)).div(totalSupply);
+        amount += payoutForEpoch[i].mul(vested.balanceOfAt(owner, blocknumberForEpoch[i])).div(totalSupply);
       }
     }
     return amount;
