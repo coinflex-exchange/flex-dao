@@ -12,7 +12,7 @@
 ### Project Contracts ###
 from brownie import FLEXCoin, DailyPayout, veFLEX
 ### Third-Party Packages ###
-from brownie.network.gas.strategies import GasNowStrategy
+from brownie.network.gas.strategies import ExponentialScalingStrategy
 from eth_account import Account
 from pytest import fixture, mark
 ### Local Modules ###
@@ -33,12 +33,11 @@ def deploy_daily_payout(admin: Account, deploy_flex: FLEXCoin, deploy_ve_flex: v
   '''
   flex: FLEXCoin  = deploy_flex
   ve_flex: veFLEX = deploy_ve_flex
-  gas_strategy    = GasNowStrategy('fast')
+  gas_strategy    = ExponentialScalingStrategy('10 gwei', '50 gwei')
   ### Deployment ###
   return DailyPayout.deploy(flex, ve_flex, { 'from': admin, 'gas_price': gas_strategy })
 
-@mark.parametrize('gas_speed', ('fast', 'standard'))
-def test_deploy_daily_payout(admin: Account, deploy_flex: FLEXCoin, deploy_ve_flex: veFLEX, gas_speed: str):
+def test_deploy_daily_payout(admin: Account, deploy_flex: FLEXCoin, deploy_ve_flex: veFLEX):
   '''
   TEST: Deploy DailyPayout Contract
   
@@ -46,11 +45,10 @@ def test_deploy_daily_payout(admin: Account, deploy_flex: FLEXCoin, deploy_ve_fl
   :param: admin  `Account`  the wallet address to deploy the contract from  
   :param: deploy_flex  `FLEXCoin`  generic ERC-20 to serve as the Staking Token  
   :param: deploy_ve_flex  `veFLEX`  vested balance token for given token  
-  :param: gas_speed  `str`  the mock speed key to be used with gas_price object; either `fast` or `standard`  
   '''
-  flex: FLEXCoin              = deploy_flex
-  ve_flex: veFLEX             = deploy_ve_flex
-  gas_strategy                = GasNowStrategy(gas_speed)
+  flex: FLEXCoin            = deploy_flex
+  ve_flex: veFLEX           = deploy_ve_flex
+  gas_strategy              = ExponentialScalingStrategy('10 gwei', '50 gwei')
   ### Deployment ###
   daily_payout: DailyPayout = DailyPayout.deploy(flex, ve_flex, { 'from': admin, 'gas_price': gas_strategy })
   print(f'DailyPayout: { daily_payout }')

@@ -12,7 +12,7 @@
 ### Project Contracts ###
 from brownie import Timelock
 ### Third-Party Packages ###
-from brownie.network.gas.strategies import GasNowStrategy
+from brownie.network.gas.strategies import ExponentialScalingStrategy
 from brownie.exceptions import VirtualMachineError
 from eth_account import Account
 from pytest import mark, raises
@@ -29,23 +29,22 @@ def deploy_timelock(admin: Account) -> Timelock:
   :returns: `Timelock`  
   '''
   delay: int     = 14 * 24 * 60 * 60
-  gas_strategy   = GasNowStrategy('fast')
+  gas_strategy   = ExponentialScalingStrategy('10 gwei', '50 gwei')
   return Timelock.deploy(admin, delay, {'from': admin, 'gas_price': gas_strategy })
 
-@mark.parametrize('delay, gas_speed', (
-  (2  * 24 * 60 * 60, 'fast'),     # 2 days
-  (14 * 24 * 60 * 60, 'standard'), # 14 days
+@mark.parametrize('delay', (
+  2  * 24 * 60 * 60, # 2 days
+  14 * 24 * 60 * 60  # 14 days
 ))
-def test_deploy_timelock(admin: Account, delay: int, gas_speed: str):
+def test_deploy_timelock(admin: Account, delay: int):
   '''
   TEST: Deploy Timelock Contract
   
   ---
   :param: admin  `Account`  the wallet address to deploy the contract from
   :param: delay  `int`  delay in seconds  
-  :param: gas_speed  `str`  the mock speed key to be used with gas_price object; either `fast` or `standard`
   '''
-  gas_strategy       = GasNowStrategy(gas_speed)
+  gas_strategy       = ExponentialScalingStrategy('10 gwei', '50 gwei')
   ### Deployment ###
   timelock: Timelock = Timelock.deploy(admin, delay, { 'from': admin, 'gas_price': gas_strategy })
   print(f'Timelock: { timelock }')

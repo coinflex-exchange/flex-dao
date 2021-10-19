@@ -12,7 +12,7 @@
 ### Project Contracts ###
 from brownie import FLEXStakingStrategy, Controller, FLEXCoin, StakingRewards, Timelock
 ### Third-Party Packages ###
-from brownie.network.gas.strategies import GasNowStrategy
+from brownie.network.gas.strategies import ExponentialScalingStrategy
 from eth_account import Account
 from pytest import mark
 ### Local Modules ###
@@ -44,14 +44,13 @@ def test_deploy_flex_staking_strategy(admin: Account, governance: Account, \
   timelock     = deploy_timelock
   rewards      = deploy_staking_rewards
   want         = deploy_flex
-  gas_strategy = GasNowStrategy('fast')
+  gas_strategy = ExponentialScalingStrategy('10 gwei', '50 gwei')
   ### Deployment ###
   return FLEXStakingStrategy.deploy(rewards, want, governance, controller, timelock, { 'from': admin, 'gas_price': gas_strategy })
 
-@mark.parametrize('gas_speed', ('standard', 'fast'))
 def test_deploy_flex_staking_strategy(admin: Account, governance: Account, \
   deploy_flex: FLEXCoin, deploy_controller: Controller, \
-    deploy_staking_rewards: StakingRewards, deploy_timelock: Timelock, gas_speed: str):
+    deploy_staking_rewards: StakingRewards, deploy_timelock: Timelock):
   '''
   TEST: Deploy a FLEXStakingStrategy contract using given Controller (DAO), Timelock, StakingRewards and use flex as want
 
@@ -62,13 +61,12 @@ def test_deploy_flex_staking_strategy(admin: Account, governance: Account, \
   :param: deploy_controller  `Controller`  the main contract of the DAO  
   :param: deploy_staking_rewards  `StakingRewards`  a deployed StakingRewards contract denoting ratio and reward due to users  
   :param: deploy_timelock  `Timelock`  a deployed Timelock contract to limit the distribution of RewardToken  
-  :param: gas_speed  `str`  the mock speed key to be used with gas_price object; either `fast` or `standard`  
   '''
   controller   = deploy_controller
   timelock     = deploy_timelock
   rewards      = deploy_staking_rewards
   want         = deploy_flex
-  gas_strategy = GasNowStrategy(gas_speed)
+  gas_strategy = ExponentialScalingStrategy('10 gwei', '50 gwei')
   ### Deployment ###
   flex_staking_strategy: FLEXStakingStrategy = FLEXStakingStrategy.deploy(rewards, want, governance, controller, timelock, { 'from': admin, 'gas_price': gas_strategy })
   print(f'FLEXStakingStrategy: { flex_staking_strategy }')
