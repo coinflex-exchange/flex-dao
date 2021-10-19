@@ -12,7 +12,7 @@
 ### Project Contracts ###
 from brownie import FLEXCoin
 ### Third-Party Packages ###
-from brownie.network.gas.strategies import GasNowStrategy
+from brownie.network.gas.strategies import ExponentialScalingStrategy
 from eth_account import Account
 from pytest import fixture, mark
 ### Local Modules ###
@@ -27,19 +27,17 @@ def deploy_flex(admin: Account) -> FLEXCoin:
   :param: admin  `Account`  the wallet address to deploy the contract from  
   :returns:  `FLEXCoin`  
   '''
-  gas_strategy = GasNowStrategy('fast')
+  gas_strategy = ExponentialScalingStrategy('10 gwei', '50 gwei')
   return FLEXCoin.deploy({ 'from': admin, 'gas_price': gas_strategy })
 
-@mark.parametrize('gas_speed', ('fast', 'standard'))
-def test_deploy_flex(admin: Account, gas_speed: str):
+def test_deploy_flex(admin: Account):
   '''
   TEST: Deploy flex Contract
   
   ---
   :param: admin  `Account`  the wallet address to deploy the contract from  
-  :param: gas_speed  `str`  the mock speed key to be used with gas_price object; either `fast` or `standard`  
   '''
   ### Deployment ###
-  gas_strategy   = GasNowStrategy(gas_speed)
+  gas_strategy   = ExponentialScalingStrategy('10 gwei', '50 gwei')
   flex: FLEXCoin = FLEXCoin.deploy({ 'from': admin, 'gas_price': gas_strategy })
   print(f'FLEXCoin: { flex }')

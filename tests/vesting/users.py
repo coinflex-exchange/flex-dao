@@ -17,7 +17,7 @@ from brownie import FLEXCoin, veFLEX
 ### Third-Party Packages ###
 from brownie.convert import Wei
 from brownie.network import Chain
-from brownie.network.gas.strategies import GasNowStrategy
+from brownie.network.gas.strategies import ExponentialScalingStrategy
 from eth_account import Account
 from pytest import mark
 ### Local Modules ###
@@ -35,7 +35,7 @@ def test_users_vesting(admin: Account, user_accounts: List[Account], amount: Dec
   TEST: Test vesting different amounts from all users.
   '''
   chain: Chain   = Chain() # get chain instance
-  gas_strategy   = GasNowStrategy('fast')
+  gas_strategy   = ExponentialScalingStrategy('10 gwei', '50 gwei')
   ### Distribute FLEXCoin to users ###
   print(f'{ BLUE }Distribute FLEXCoin to users.{ NFMT }')
   flex: FLEXCoin = deploy_flex
