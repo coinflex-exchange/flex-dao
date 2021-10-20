@@ -77,4 +77,8 @@ def test_claim_calls(admin: Account, user_accounts: List[Account], deploy_flex: 
   print(f'Claimable Amount: { claimable }')
   claim_txn = payout.claim(claimant, { 'from': admin })
   print(f'Claim Txn: { claim_txn }')
+<<<<<<< HEAD
   #chain.sleep(86400) # 1 day in seconds
+=======
+  #chain.sleep(86400) # 1 day in seconds
+>>>>>>> a21e76913beb765c2297958a57ad145e0a31aa9d
