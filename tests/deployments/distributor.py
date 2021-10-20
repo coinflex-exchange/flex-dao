@@ -12,7 +12,7 @@
 ### Project Contracts ###
 from brownie import FLEXCoin, DailyPayout, Distributor, QuarterlyPayout
 ### Third-Party Packages ###
-from brownie.network.gas.strategies import GasNowStrategy
+from brownie.network.gas.strategies import ExponentialScalingStrategy
 from eth_account import Account
 from pytest import fixture, mark
 ### Local Modules ###
@@ -35,7 +35,7 @@ def deploy_daily_distributor(admin: Account, deploy_flex: FLEXCoin, deploy_daily
   '''
   flex: FLEXCoin      = deploy_flex
   payout: DailyPayout = deploy_daily_payout
-  gas_strategy        = GasNowStrategy('fast')
+  gas_strategy        = ExponentialScalingStrategy('10 gwei', '50 gwei')
   ### Deployment ###
   return Distributor.deploy(payout, flex, { 'from': admin, 'gas_price': gas_strategy })
 
@@ -52,12 +52,11 @@ def deploy_quarterly_distributor(admin: Account, deploy_flex: FLEXCoin, deploy_q
   '''
   flex: FLEXCoin          = deploy_flex
   payout: QuarterlyPayout = deploy_quarterly_payout
-  gas_strategy            = GasNowStrategy('fast')
+  gas_strategy            = ExponentialScalingStrategy('10 gwei', '50 gwei')
   ### Deployment ###
   return Distributor.deploy(payout, flex, { 'from': admin, 'gas_price': gas_strategy })
 
-@mark.parametrize('gas_speed', ('fast', 'standard'))
-def test_deploy_daily_distributor(admin: Account, deploy_flex: FLEXCoin, deploy_daily_payout: DailyPayout, gas_speed: str):
+def test_deploy_daily_distributor(admin: Account, deploy_flex: FLEXCoin, deploy_daily_payout: DailyPayout):
   '''
   TEST: Deploy DailyPayout Contract with its payout set to DailyPayout contract deployed
   
@@ -65,17 +64,15 @@ def test_deploy_daily_distributor(admin: Account, deploy_flex: FLEXCoin, deploy_
   :param: admin  `Account`  the wallet address to deploy the contract from  
   :param: deploy_flex  `FLEXCoin`  generic ERC-20 to serve as the Staking Token  
   :param: deploy_daily_payout  `DailyPayout`  Payout contract with daily epoch
-  :param: gas_speed  `str`  the mock speed key to be used with gas_price object; either `fast` or `standard`  
   '''
   flex: FLEXCoin           = deploy_flex
   payout: DailyPayout      = deploy_daily_payout
-  gas_strategy             = GasNowStrategy(gas_speed)
+  gas_strategy             = ExponentialScalingStrategy('10 gwei', '50 gwei')
   ### Deployment ###
   distributor: Distributor = Distributor.deploy(payout, flex, { 'from': admin, 'gas_price': gas_strategy })
   print(f'Distributor: { distributor }')
 
-@mark.parametrize('gas_speed', ('fast', 'standard'))
-def test_deploy_quarterly_distributor(admin: Account, deploy_flex: FLEXCoin, deploy_quarterly_payout: QuarterlyPayout, gas_speed: str):
+def test_deploy_quarterly_distributor(admin: Account, deploy_flex: FLEXCoin, deploy_quarterly_payout: QuarterlyPayout):
   '''
   TEST: Deploy Distributor Contract with its payout set to QuarterlyPayout contract deployed
   
@@ -83,11 +80,10 @@ def test_deploy_quarterly_distributor(admin: Account, deploy_flex: FLEXCoin, dep
   :param: admin  `Account`  the wallet address to deploy the contract from  
   :param: deploy_flex  `FLEXCoin`  generic ERC-20 to serve as the Staking Token  
   :param: deploy_quarterly_payout  `QuarterlyPayout`  Payout contract with 13 week epoch
-  :param: gas_speed  `str`  the mock speed key to be used with gas_price object; either `fast` or `standard`  
   '''
   flex: FLEXCoin           = deploy_flex
   payout: QuarterlyPayout  = deploy_quarterly_payout
-  gas_strategy             = GasNowStrategy(gas_speed)
+  gas_strategy             = ExponentialScalingStrategy('10 gwei', '50 gwei')
   ### Deployment ###
   distributor: Distributor = Distributor.deploy(payout, flex, { 'from': admin, 'gas_price': gas_strategy })
   print(f'Distributor: { distributor }')

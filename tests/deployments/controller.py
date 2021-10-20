@@ -12,7 +12,7 @@
 ### Project Contracts ###
 from brownie import Controller, Timelock
 ### Third-Party Packages ###
-from brownie.network.gas.strategies import GasNowStrategy
+from brownie.network.gas.strategies import ExponentialScalingStrategy
 from eth_account import Account
 from pytest import fixture, mark
 ### Local Modules ###
@@ -26,18 +26,15 @@ def deploy_controller(admin: Account, \
   FIXTURE: Returns deployed Controller contract to be used by other contract testing.
   '''
   timelock     = deploy_timelock
-  gas_strategy = GasNowStrategy('fast')
+  gas_strategy = ExponentialScalingStrategy('10 gwei', '50 gwei')
   return Controller.deploy(governance, timelock, treasury, { 'from': admin, 'gas_price': gas_strategy })
 
-@mark.parametrize('gas_speed', ('standard', 'fast'))
-def test_deploy_controller(admin: Account, \
-  governance: Account, treasury: Account, \
-    deploy_timelock: Timelock, gas_speed: str):
+def test_deploy_controller(admin: Account, governance: Account, treasury: Account, deploy_timelock: Timelock):
   '''
   TEST: Deploy Controller Contract
   '''
   timelock = deploy_timelock
   ### Deployment ###
-  gas_strategy = GasNowStrategy(gas_speed)
+  gas_strategy = ExponentialScalingStrategy('10 gwei', '50 gwei')
   ctrl         = Controller.deploy(governance, timelock, treasury, { 'from': admin, 'gas_price': gas_strategy })
   print(f'Controller: { ctrl }')
