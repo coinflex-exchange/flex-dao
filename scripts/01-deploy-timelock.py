@@ -14,7 +14,7 @@ from brownie import Timelock
 ### Third-Party Packages ###
 from brownie.convert import Wei
 from brownie.network import accounts, Chain
-from brownie.network.gas.strategies import GasNowStrategy
+from brownie.network.gas.strategies import ExponentialScalingStrategy
 from eth_account.account import Account, ValidationError
 from yaml import safe_load
 
@@ -86,7 +86,7 @@ def main(gas_speed: str = 'standard'):
   delay_seconds = delay * 24 * 60 * 60
 
   ### Set Gas Price ##
-  gas_strategy = GasNowStrategy(gas_speed)
+  gas_strategy = ExponentialScalingStrategy('10 gwei', '50 gwei')
 
   ### Deployment ###
   timelock = Timelock.deploy(admin, delay_seconds, { 'from': acct, 'gas_price': gas_strategy })
