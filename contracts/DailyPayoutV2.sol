@@ -7,7 +7,7 @@ import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
 import '../interfaces/IVested.sol';
 
-contract DailyPayoutV1 is Ownable
+contract DailyPayoutV2 is Ownable
 {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
@@ -15,9 +15,10 @@ contract DailyPayoutV1 is Ownable
   /* =========  MEMBER VARS ========== */
   IERC20 immutable public token;  // FLEX token
   IVested immutable public vested; // veFLEX
-  uint256 public constant EPOCH_BLOCKS = 17280; // average blocks in 1 day with 5s block interval
+  uint256 public constant INIT_EPOCH_LEN = 17280; // average blocks in 1 day with 5s block interval
   uint256 public startBlockHeight;
   uint256[] public payoutForEpoch;
+  uint256[2][] public epochLengthHistory;
   mapping(address => uint256) public claimedEpoches;
   mapping(address => bool) public isDistributor;
 
@@ -25,6 +26,7 @@ contract DailyPayoutV1 is Ownable
   event Claim(address indexed from, uint256 amount, uint256 endingEpoch);
   event UpdateDistributor(address indexed account, bool status);
   event Distribute(address distributor, uint256 amount);
+  event SetEpochLength(uint256 startEpoch, uint256 blocks);
   /* ========== CONSTRUCTOR ========== */
 
   constructor(address tknAddr, address veAddr)
@@ -33,6 +35,7 @@ contract DailyPayoutV1 is Ownable
     require(veAddr != address(0) , 'Vested address cannot be zero.'); // veFLEX
     token = IERC20(tknAddr);
     vested = IVested(veAddr);
+    epochLengthHistory.push([0, INIT_EPOCH_LEN]);
   }
 
   function addDistributor(address account) public onlyOwner {
@@ -48,6 +51,13 @@ contract DailyPayoutV1 is Ownable
   function setStartBlockHeight(uint256 blockHeight) public onlyOwner {
     require(blockHeight == 0, "start block height already set!");
     startBlockHeight = blockHeight;
+  }
+
+  function setEpochLength(uint256 startEpoch, uint256 blocks) external onlyOwner {
+    require(startEpoch > getCurrentEpoch(), 'can only set future epoch length');
+    require(blocks != 0, '0 blocks is not a valid epoch length');
+    epochLengthHistory.push([startEpoch, blocks]);
+    emit SetEpochLength(startEpoch, blocks);
   }
 
   function distribute(uint256 amount) external {
@@ -94,6 +104,21 @@ contract DailyPayoutV1 is Ownable
   }
 
   function getEpochBlockHeight(uint256 epoch) internal view returns(uint256) {
-    return startBlockHeight.add(EPOCH_BLOCKS.mul(epoch));
+    if (epochLengthHistory.length == 1) {
+      return startBlockHeight.add(INIT_EPOCH_LEN.mul(epoch));
+    } else {
+      uint256 epochBlockHeight = startBlockHeight;
+      uint256 epochLength;
+      uint256 epochEnd;
+      for (uint256 i = epochLengthHistory.length - 1; i >= 0; i--) {
+        if (epoch > epochLengthHistory[i][0]) {
+            epochEnd = epochLengthHistory[i][0];
+            epochLength = epochLengthHistory[i][1];
+            epochBlockHeight = epochBlockHeight.add(epochLength.mul(epoch.sub(epochEnd)));
+            epoch = epochEnd;
+        }
+      }
+      return epochBlockHeight;
+    }
   }
 }
