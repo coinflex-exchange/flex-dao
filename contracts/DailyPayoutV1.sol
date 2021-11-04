@@ -15,16 +15,16 @@ contract DailyPayoutV1 is Ownable
   /* =========  MEMBER VARS ========== */
   IERC20 immutable public token;  // FLEX token
   IVested immutable public vested; // veFLEX
-  uint256 public constant EPOCH_BLOCKS = 86400; // 24 hours in seconds
-  uint256 public startTime;
+  uint256 public constant EPOCH_BLOCKS = 17280; // average blocks in 1 day with 5s block interval
+  uint256 public startBlockHeight;
   uint256[] public payoutForEpoch;
-  uint256[] public blocknumberForEpoch;
   mapping(address => uint256) public claimedEpoches;
   mapping(address => bool) public isDistributor;
 
   /* ===========   EVENTS  =========== */
   event Claim(address indexed from, uint256 amount, uint256 endingEpoch);
-
+  event UpdateDistributor(address indexed account, bool status);
+  event Distribute(address distributor, uint256 amount);
   /* ========== CONSTRUCTOR ========== */
 
   constructor(address tknAddr, address veAddr)
@@ -37,23 +37,25 @@ contract DailyPayoutV1 is Ownable
 
   function addDistributor(address account) public onlyOwner {
     isDistributor[account] = true;
+    emit UpdateDistributor(account, true);
   }
 
   function removeDistributor(address account) public onlyOwner {
     isDistributor[account] = false;
+    emit UpdateDistributor(account, false);
   }
 
-  function setStartTime(uint256 timestamp) public onlyOwner {
-    require(startTime == 0, "start time already set!");
-    startTime = timestamp;
+  function setStartBlockHeight(uint256 blockHeight) public onlyOwner {
+    require(blockHeight == 0, "start block height already set!");
+    startBlockHeight = blockHeight;
   }
 
   function distribute(uint256 amount) external {
     require(msg.sender == owner() || isDistributor[msg.sender], "distributor not authorized!");
     require(amount > 0, "amount to be distributed must be greater than zero!");
-    token.safeTransferFrom(msg.sender, address(this), amount);
     payoutForEpoch.push(amount);
-    blocknumberForEpoch.push(block.number);
+    emit Distribute(msg.sender, amount);
+    token.safeTransferFrom(msg.sender, address(this), amount);
   }
 
   function currentEpoch() public view returns(uint256) {
@@ -63,34 +65,22 @@ contract DailyPayoutV1 is Ownable
   function claim(address owner) external {
     uint256 epoch = currentEpoch();
     if (epoch > 0) {
-      _claimUntilEpoch(owner, epoch - 1);
+      _claimUntilEpoch(owner, epoch.sub(1));
     }
-  }
-
-  // endingEpoch starts from 0
-  function claimUntilEpoch(address owner, uint256 endingEpoch) external {
-    _claimUntilEpoch(owner, endingEpoch);
   }
 
   function getClaimable(address owner) external view returns(uint256) {
     uint256 epoch = currentEpoch();
     if (epoch == 0) return 0;
-    return _getClaimableUntilEpoch(owner, currentEpoch().sub(1));
-  }
-
-  function getClaimableUntilEpoch(address owner, uint256 endingEpoch) external view returns(uint256) {
-    return _getClaimableUntilEpoch(owner, endingEpoch);
+    return _getClaimableUntilEpoch(owner, epoch.sub(1));
   }
 
   function _getClaimableUntilEpoch(address owner, uint256 endingEpoch) internal view returns(uint256) {
     uint256 amount = 0;
     for (uint256 i = claimedEpoches[owner]; i <= endingEpoch; i++) {
-      uint256 epochStartTime = getEpochStartTime(i);
-      //uint256 totalSupply = vested.totalSupply(epochStartTime);
-      uint256 totalSupply = vested.totalSupplyAt(blocknumberForEpoch[i]);
+      uint256 totalSupply = vested.totalSupplyAt(getEpochBlockHeight(i));
       if (totalSupply > 0) {
-        //amount += payoutForEpoch[i].mul(vested.balanceOf(owner, epochStartTime)).div(totalSupply);
-        amount += payoutForEpoch[i].mul(vested.balanceOfAt(owner, blocknumberForEpoch[i])).div(totalSupply);
+        amount += payoutForEpoch[i].mul(vested.balanceOfAt(owner, getEpochBlockHeight(i))).div(totalSupply);
       }
     }
     return amount;
@@ -98,12 +88,12 @@ contract DailyPayoutV1 is Ownable
 
   function _claimUntilEpoch(address owner, uint256 endingEpoch) internal {
     uint256 amount = _getClaimableUntilEpoch(owner, endingEpoch);
-    token.safeTransfer(owner, amount);
     claimedEpoches[owner] = endingEpoch.add(1);
     emit Claim(owner, amount, endingEpoch);
+    token.safeTransfer(owner, amount);
   }
 
-  function getEpochStartTime(uint256 epoch) internal view returns(uint256) {
-    return startTime.add(epoch_period.mul(epoch));
+  function getEpochBlockHeight(uint256 epoch) internal view returns(uint256) {
+    return startBlockHeight.add(EPOCH_BLOCKS.mul(epoch));
   }
 }
