@@ -13,7 +13,7 @@
 from decimal import Decimal
 from typing import List
 ### Project Contracts ###
-from brownie import DailyPayout, FLEXCoin, veFLEX
+from brownie import DailyPayout, DailyPayoutV1, FLEXCoin, veFLEX, Distributor
 ### Third-Party Packages ###
 from brownie.network import Chain
 from brownie.network.gas.strategies import ExponentialScalingStrategy
@@ -21,9 +21,10 @@ from eth_account import Account
 from pytest import mark
 ### Local Modules ###
 from tests import admin, user_accounts
-from tests.deployments.daily_payout import deploy_daily_payout
+from tests.deployments.daily_payout import deploy_daily_payout, deploy_daily_payout_v1
 from tests.deployments.flex import deploy_flex
 from tests.deployments.ve_flex import deploy_ve_flex # Used by deploy_daily_payout
+from tests.deployments.distributor import deploy_daily_distributor_for_v1
 
 def test_distribute_calls(admin: Account, deploy_flex: FLEXCoin, deploy_daily_payout: DailyPayout):
   epochs: int           = 10
@@ -78,3 +79,32 @@ def test_claim_calls(admin: Account, user_accounts: List[Account], deploy_flex: 
   claim_txn = payout.claim(claimant, { 'from': admin })
   print(f'Claim Txn: { claim_txn }')
   #chain.sleep(86400) # 1 day in seconds
+
+def test_dailyPayoutV1_integration_test_with_distributor(admin: Account, user_accounts: List[Account], deploy_flex: FLEXCoin, deploy_daily_payout_v1: DailyPayoutV1, deploy_daily_distributor_for_v1: Distributor):
+  # 1: test set up
+  epochs: int             = 50
+  flex: FLEXCoin          = deploy_flex
+  payout: DailyPayoutV1   = deploy_daily_payout_v1
+  gas_strategy            = ExponentialScalingStrategy('10 gwei', '50 gwei')
+  chain                   = Chain()
+  EPOCH_BLOCKS: int       = 17280;
+  alice                   = user_accounts[1]
+  bob                     = user_accounts[2]
+
+  # 2: ownable test
+  payout_admin = payout.owner()
+  assert payout_admin == admin
+
+  # 3: start block height set and test
+  startBlockHeight: int   = chain.height
+  print(f'current block height: {startBlockHeight}')
+  payout.setStartBlockHeight(startBlockHeight, {'from': admin, 'gas_price': gas_strategy})
+  assert payout.startBlockHeight() == startBlockHeight
+
+  # 4: add/remove distributor test
+  tx = payout.addDistributor(alice, {'from': admin, 'gas_price': gas_strategy})
+  assert payout.isDistributor(alice) == True
+  print(tx.events)
+  tx = payout.removeDistributor(alice, {'from': admin, 'gas_price': gas_strategy})
+  assert payout.isDistributor(alice) == False
+  print(tx.events)

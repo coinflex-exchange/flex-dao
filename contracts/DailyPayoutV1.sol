@@ -46,7 +46,7 @@ contract DailyPayoutV1 is Ownable
   }
 
   function setStartBlockHeight(uint256 blockHeight) public onlyOwner {
-    require(blockHeight == 0, "start block height already set!");
+    require(startBlockHeight == 0, "start block height already set!");
     startBlockHeight = blockHeight;
   }
 

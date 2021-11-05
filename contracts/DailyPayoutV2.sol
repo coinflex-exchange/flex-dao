@@ -28,7 +28,6 @@ contract DailyPayoutV2 is Ownable
   event Distribute(address distributor, uint256 amount);
   event SetEpochLength(uint256 startEpoch, uint256 blocks);
   /* ========== CONSTRUCTOR ========== */
-
   constructor(address tknAddr, address veAddr)
   {
     require(tknAddr != address(0), 'Token address cannot be zero.');  // FLEX token
@@ -54,7 +53,7 @@ contract DailyPayoutV2 is Ownable
   }
 
   function setEpochLength(uint256 startEpoch, uint256 blocks) external onlyOwner {
-    require(startEpoch > getCurrentEpoch(), 'can only set future epoch length');
+    require(startEpoch > currentEpoch(), 'can only set future epoch length');
     require(blocks != 0, '0 blocks is not a valid epoch length');
     epochLengthHistory.push([startEpoch, blocks]);
     emit SetEpochLength(startEpoch, blocks);
