@@ -72,6 +72,7 @@ contract DailyPayoutV2 is Ownable
   }
 
   function claim(address owner) external {
+    require(owner == msg.sender, "can only claim for yourself account");
     uint256 epoch = currentEpoch();
     if (epoch > 0) {
       _claimUntilEpoch(owner, epoch.sub(1));
