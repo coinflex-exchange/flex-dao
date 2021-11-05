@@ -21,7 +21,6 @@ contract Controller
   mapping(address => address) public strategies;
   mapping(address => mapping(address => address)) public converters;
   mapping(address => mapping(address => bool)) public approvedStrategies;
-  mapping(address => bool) public approvedVaultConverters;
 
   constructor(
     address _governance,
@@ -56,18 +55,6 @@ contract Controller
     require(msg.sender == governance, '!governance');
     require(vaults[_token] == address(0), 'vault');
     vaults[_token] = _vault;
-  }
-
-  function approveVaultConverter(address _converter) public
-  {
-    require(msg.sender == governance, '!governance');
-    approvedVaultConverters[_converter] = true;
-  }
-
-  function revokeVaultConverter(address _converter) public
-  {
-    require(msg.sender == governance, '!governance');
-    approvedVaultConverters[_converter] = false;
   }
 
   function approveStrategy(address _token, address _strategy) public
