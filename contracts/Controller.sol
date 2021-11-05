@@ -23,8 +23,6 @@ contract Controller
   mapping(address => mapping(address => bool)) public approvedStrategies;
   mapping(address => bool) public approvedVaultConverters;
 
-  uint256 public split = 500;
-  uint256 public constant max = 10000;
   constructor(
     address _governance,
     address _timelock,
@@ -39,14 +37,6 @@ contract Controller
   {
     require(msg.sender == governance, '!governance');
     treasury = _treasury;
-  }
-
-
-  function setSplit(uint256 _split) public
-  {
-    require(msg.sender == governance, '!governance');
-    require(_split <= max, 'numerator cannot be greater than denominator');
-    split = _split;
   }
 
   function setGovernance(address _governance) public
