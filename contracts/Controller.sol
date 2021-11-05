@@ -17,10 +17,6 @@ contract Controller
   address public treasury;
   address public timelock;
 
-  // Convenience fee 0.1%
-  uint256 public convenienceFee = 100;
-  uint256 public constant convenienceFeeMax = 100000;
-
   mapping(address => address) public vaults;
   mapping(address => address) public strategies;
   mapping(address => mapping(address => address)) public converters;
@@ -95,12 +91,6 @@ contract Controller
     require(msg.sender == governance, '!governance');
     require(strategies[_token] != _strategy, 'cannot revoke active strategy');
     approvedStrategies[_token][_strategy] = false;
-  }
-
-  function setConvenienceFee(uint256 _convenienceFee) external
-  {
-    require(msg.sender == timelock, '!timelock');
-    convenienceFee = _convenienceFee;
   }
 
   function setStrategy(address _token, address _strategy) public
