@@ -15,18 +15,17 @@ contract DailyPayoutV1 is Ownable
   /* =========  MEMBER VARS ========== */
   IERC20 immutable public token;  // FLEX token
   IVested immutable public vested; // veFLEX
-  uint256 public constant EPOCH_BLOCKS = 17280; // average blocks in 1 day with 5s block interval
+  uint256 public constant EPOCH_BLOCKS = 17280; // 10 is for test and 17280 is average blocks in 1 day with 5s block interval
   uint256 public startBlockHeight;
   uint256[] public payoutForEpoch;
   mapping(address => uint256) public claimedEpoches;
   mapping(address => bool) public isDistributor;
 
   /* ===========   EVENTS  =========== */
-  event Claim(address indexed from, uint256 amount, uint256 endingEpoch);
-  event UpdateDistributor(address indexed account, bool status);
+  event Claim(address indexed from, uint256 amount, uint256 lastClaimedEpoch, uint256 endingEpoch);
+  event IsDistributor(address indexed account, bool status);
   event Distribute(address distributor, uint256 amount);
   /* ========== CONSTRUCTOR ========== */
-
   constructor(address tknAddr, address veAddr)
   {
     require(tknAddr != address(0), 'Token address cannot be zero.');  // FLEX token
@@ -37,12 +36,12 @@ contract DailyPayoutV1 is Ownable
 
   function addDistributor(address account) public onlyOwner {
     isDistributor[account] = true;
-    emit UpdateDistributor(account, true);
+    emit IsDistributor(account, true);
   }
 
   function removeDistributor(address account) public onlyOwner {
     isDistributor[account] = false;
-    emit UpdateDistributor(account, false);
+    emit IsDistributor(account, false);
   }
 
   function setStartBlockHeight(uint256 blockHeight) public onlyOwner {
@@ -63,6 +62,7 @@ contract DailyPayoutV1 is Ownable
   }
 
   function claim(address owner) external {
+    require(owner == msg.sender, "can only claim for yourself account");
     uint256 epoch = currentEpoch();
     if (epoch > 0) {
       _claimUntilEpoch(owner, epoch.sub(1));
@@ -72,28 +72,34 @@ contract DailyPayoutV1 is Ownable
   function getClaimable(address owner) external view returns(uint256) {
     uint256 epoch = currentEpoch();
     if (epoch == 0) return 0;
-    return _getClaimableUntilEpoch(owner, epoch.sub(1));
-  }
-
-  function _getClaimableUntilEpoch(address owner, uint256 endingEpoch) internal view returns(uint256) {
-    uint256 amount = 0;
-    for (uint256 i = claimedEpoches[owner]; i <= endingEpoch; i++) {
-      uint256 totalSupply = vested.totalSupplyAt(getEpochBlockHeight(i));
-      if (totalSupply > 0) {
-        amount += payoutForEpoch[i].mul(vested.balanceOfAt(owner, getEpochBlockHeight(i))).div(totalSupply);
-      }
-    }
+    (uint256 amount, ) = _getClaimableUntilEpoch(owner, epoch.sub(1));
     return amount;
   }
 
-  function _claimUntilEpoch(address owner, uint256 endingEpoch) internal {
-    uint256 amount = _getClaimableUntilEpoch(owner, endingEpoch);
-    claimedEpoches[owner] = endingEpoch.add(1);
-    emit Claim(owner, amount, endingEpoch);
-    token.safeTransfer(owner, amount);
+  function getEpochBlockHeight(uint256 epoch) public view returns(uint256) {
+    return startBlockHeight.add(EPOCH_BLOCKS.mul(epoch));
   }
 
-  function getEpochBlockHeight(uint256 epoch) internal view returns(uint256) {
-    return startBlockHeight.add(EPOCH_BLOCKS.mul(epoch));
+  function _getClaimableUntilEpoch(address owner, uint256 endingEpoch) internal view returns(uint256, uint256) {
+    uint256 amount;
+    uint256 i;
+    uint256 blockHeightAtEpochStartTime;
+    uint256 totalSupply;
+    for (i = claimedEpoches[owner]; i <= endingEpoch; i++) {
+      blockHeightAtEpochStartTime = getEpochBlockHeight(i);
+      if (block.number <= blockHeightAtEpochStartTime) break;
+      totalSupply = vested.totalSupplyAt(blockHeightAtEpochStartTime);
+      if (totalSupply > 0) {
+        amount += payoutForEpoch[i].mul(vested.balanceOfAt(owner, blockHeightAtEpochStartTime)).div(totalSupply);
+      }
+    }
+    return (amount, i-1);
+  }
+
+  function _claimUntilEpoch(address owner, uint256 endingEpoch) internal {
+    (uint256 amount, uint256 lastClaimedEpoch) = _getClaimableUntilEpoch(owner, endingEpoch);
+    claimedEpoches[owner] = lastClaimedEpoch.add(1);
+    emit Claim(owner, amount, lastClaimedEpoch, endingEpoch);
+    token.safeTransfer(owner, amount);
   }
 }
