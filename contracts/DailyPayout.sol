@@ -15,7 +15,7 @@ contract DailyPayout is Ownable
   /* =========  MEMBER VARS ========== */
   IERC20 immutable public token;  // FLEX token
   IVested immutable public vested; // veFLEX
-  uint256 public constant INIT_EPOCH_LEN = 17280; // 10 is for test and 17280 is average blocks in 1 day with 5s block interval
+  uint256 public initBlockLength; // 10 is for test and 17280 is average blocks in 1 day with 5s block interval
   uint256 public startBlockHeight;
   uint256[] public payoutForEpoch;
   uint256[2][] public epochLengthHistory;
@@ -34,7 +34,6 @@ contract DailyPayout is Ownable
     require(veAddr != address(0) , 'Vested address cannot be zero.'); // veFLEX
     token = IERC20(tknAddr);
     vested = IVested(veAddr);
-    epochLengthHistory.push([0, INIT_EPOCH_LEN]);
   }
 
   function addDistributor(address account) public onlyOwner {
@@ -52,6 +51,13 @@ contract DailyPayout is Ownable
     startBlockHeight = blockHeight;
   }
 
+  function setInitEpochBlockLength(uint256 blockLength) public onlyOwner {
+    require(blockLength != 0, "canot set 0 as epoch block length!");
+    require(initBlockLength == 0, "init block length already set!");
+    initBlockLength = blockLength;
+    epochLengthHistory.push([0, initBlockLength]);
+  }
+
  /**
   * @dev
   *   Only necessary in chain average block interval changes.
@@ -61,7 +67,7 @@ contract DailyPayout is Ownable
     uint256 lastEpochBlockLen = epochLengthHistory[epochLengthHistory.length - 1][1];
     require(blocks != 0, '0 blocks is not a valid epoch length');
     require(blocks != lastEpochBlockLen, 'epoch length is the same with last epoch length');
-    uint256 startEpoch = getCurrentEpoch() + 1;
+    uint256 startEpoch = _getCurrentEpoch() + 1;
     epochLengthHistory.push([startEpoch, blocks]);
     emit SetEpochLength(startEpoch, blocks);
   }
@@ -74,9 +80,9 @@ contract DailyPayout is Ownable
   *   setNextEpochLength func.
   */
   function updateLastEpochLength(uint256 blocks) external onlyOwner {
-    uint256 currentEpoch = getCurrentEpoch();
-    uint256 lastEpochInEpochHistory = epochLengthHistory[epochLengthHistory.length - 1][0];
-    require(lastEpochInEpochHistory - currentEpoch == 1, 'can only update next epoch length');
+    uint256 currentEpoch = _getCurrentEpoch();
+    uint256 lastEpochInEpochLengthHistory = epochLengthHistory[epochLengthHistory.length - 1][0];
+    require(lastEpochInEpochLengthHistory == currentEpoch + 1, 'can only update next epoch length');
     uint256 lastEpochBlockLen = epochLengthHistory[epochLengthHistory.length - 1][1];
     require(blocks != 0, '0 blocks is not a valid epoch length');
     require(blocks != lastEpochBlockLen, 'epoch length is the same with last epoch length');
@@ -102,7 +108,7 @@ contract DailyPayout is Ownable
   }
 
   function claim(address owner) external {
-    require(owner == msg.sender, "can only claim for yourself account");
+    require(owner == msg.sender, "can only claim for own account");
     uint256 epoch = currentEpoch();
     if (epoch > 0) {
       _claimUntilEpoch(owner, epoch.sub(1));
@@ -117,24 +123,39 @@ contract DailyPayout is Ownable
   }
 
 /**
+  * @dev get current epoch for owner
+  */
+  function getCurrentEpoch() external view onlyOwner returns(uint256) {
+    return _getCurrentEpoch();
+  }
+
+/**
+  * @dev get epoch start block height for owner
+  */
+  function getEpochStartBlockHeight(uint256 epoch) external view onlyOwner returns(uint256) {
+    return _getEpochStartBlockHeight(epoch);
+  }
+
+
+/**
   * @dev 
   *   Rewarded epochs might extend to the future, but can only 
   *   claim until epochs no later than the current acutal epoch.
   */
   function _getClaimableUntilEpoch(address owner, uint256 endingEpoch) internal view returns(uint256, uint256) {
-    uint256 amount;
-    uint256 i;
+    uint256 amount = 0;
+    uint256 epoch = 0;
     uint256 blockHeightAtEpochStartTime;
     uint256 totalSupply;
-    for (i = claimedEpoches[owner]; i <= endingEpoch; i++) {
-      blockHeightAtEpochStartTime = getEpochStartBlockHeight(i);
+    for (epoch = claimedEpoches[owner]; epoch <= endingEpoch; epoch++) {
+      blockHeightAtEpochStartTime = _getEpochStartBlockHeight(epoch);
       if (block.number <= blockHeightAtEpochStartTime) break;
       totalSupply = vested.totalSupplyAt(blockHeightAtEpochStartTime);
       if (totalSupply > 0) {
-        amount += payoutForEpoch[i].mul(vested.balanceOfAt(owner, blockHeightAtEpochStartTime)).div(totalSupply);
+        amount += payoutForEpoch[epoch].mul(vested.balanceOfAt(owner, blockHeightAtEpochStartTime)).div(totalSupply);
       }
     }
-    return (amount, i - 1);
+    return (amount, epoch - 1);
   }
 
   function _claimUntilEpoch(address owner, uint256 endingEpoch) internal {
@@ -149,9 +170,9 @@ contract DailyPayout is Ownable
   *   Given epoch number, get the epoch start block height.
   *   If chain block interval changes, function will handle variable epoch lengths.
   */
-  function getEpochStartBlockHeight(uint256 epoch) internal view returns(uint256) {
+  function _getEpochStartBlockHeight(uint256 epoch) internal view returns(uint256) {
     if (epochLengthHistory.length == 1) {
-      return startBlockHeight.add(INIT_EPOCH_LEN.mul(epoch));
+      return startBlockHeight.add(initBlockLength.mul(epoch));
     } else {
       uint256 epochBlockHeight = startBlockHeight;
       uint256 epochLength;
@@ -169,15 +190,15 @@ contract DailyPayout is Ownable
     }
   }
 
-/**
+ /**
   * @dev This is the actual current epoch.
   */
-  function getCurrentEpoch() internal view returns(uint256) {
-    uint256 i = 0;
+  function _getCurrentEpoch() internal view returns(uint256) {
+    uint256 epoch = 0;
     while(true) {
-      if (block.number <= getEpochStartBlockHeight(i)) break;
-      i++;
+      if (block.number < _getEpochStartBlockHeight(epoch)) break;
+      epoch++;
     }
-    return i - 1;
+    return epoch - 1;
   }
 }

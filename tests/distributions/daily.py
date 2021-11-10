@@ -57,13 +57,14 @@ def test_claim_calls(admin: Account, user_accounts: List[Account], deploy_flex: 
   ve_flex.create_lock(flex.balanceOf(claimant), unlock_time, { 'from': claimant, 'gas_price': gas_strategy })
   print(f'veFLEX Balance: { ve_flex.balanceOf(claimant) }')
   ### Sets Payout StartTime ###
-  payout.setStartTime(chain.time(), { 'from': admin, 'gas_price': gas_strategy })
-  ### Sleep ###
-  chain.sleep(86400) # 1 day in seconds
+  payout.setStartBlockHeight(chain.height, { 'from': admin, 'gas_price': gas_strategy })
+  payout.setInitEpochBlockLength(10, { 'from': admin, 'gas_price': gas_strategy })
+  ### Chain travel ###
+  chain.mine(5) # after 1 epoch
   ### Claim ###
   for _ in range(epochs):
     claimable: Decimal = payout.getClaimable(claimant)#, { 'from': claimant, 'gas_price': gas_strategy })
     print(f'Claimable Amount: { claimable }')
-    claim_txn = payout.claim(claimant, { 'from': admin })
-    print(f'Claim Txn: { claim_txn }')
-    chain.sleep(86400) # 1 day in seconds
+    claim_txn = payout.claim(claimant, { 'from': claimant, 'gas_price': gas_strategy })
+    print(f'Claim Txn: { claim_txn.events }')
+    chain.mine(9) # after 1 epoch
