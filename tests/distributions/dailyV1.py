@@ -173,3 +173,113 @@ def test_dailyPayout_integration_with_distributor(admin: Account, user_accounts:
   tx = payout.claim(alice, { 'from': alice, 'gas_price': gas_strategy })
   print(tx.events)
   assert tx.events['Claim']['amount'] == alice_claimable
+
+def test_epoch0_is_not_claimable(admin: Account, user_accounts: List[Account], deploy_flex: FLEXCoin, deploy_ve_flex: veFLEX, deploy_daily_payout: DailyPayout, deploy_daily_distributor: Distributor):
+  # 1: test set up
+  flex: FLEXCoin           = deploy_flex
+  ve_flex: veFLEX          = deploy_ve_flex
+  payout: DailyPayout      = deploy_daily_payout
+  distributor: Distributor = deploy_daily_distributor
+  gas_strategy             = ExponentialScalingStrategy('10 gwei', '50 gwei')
+  chain                    = Chain()
+  alice                    = user_accounts[1]
+  flex.transfer(alice, 10*1e18, {'from': admin, 'gas_price': gas_strategy})
+
+  # 2: start block height set and test
+  startBlockHeight: int   = chain.height
+  print(f'epoch starts at block height: {startBlockHeight}')
+  payout.setStartBlockHeight(startBlockHeight, {'from': admin, 'gas_price': gas_strategy})
+  payout.setInitEpochBlockLength(10, { 'from': admin, 'gas_price': gas_strategy })
+  print(f'====> block height {chain.height}')
+  print(f'***** epoch number {payout.getCurrentEpoch()}')
+
+  # 3: stake some into veFlex from alice at epoch 0
+  unlock_time  = chain.time() + (4 * 365 * 86400) # 4 years in seconds
+  ve_flex.create_lock(flex.balanceOf(alice), unlock_time, { 'from': alice, 'gas_price': gas_strategy })
+  print(f'alice stake at block height {chain.height}')
+  print(f'***** epoch number {payout.getCurrentEpoch()}') 
+
+  # 4: distribute for epoch 0
+  payout.addDistributor(distributor, {'from': admin, 'gas_price': gas_strategy})
+  flex.transfer(distributor, 1e18, {'from': admin, 'gas_price': gas_strategy})
+  distributor.distribute({'from': admin, 'gas_price': gas_strategy})
+
+  # 4: claim at epoch 0, should get none
+  alice_claimable = payout.getClaimable(alice)
+  print(f'alice claimable reward: {alice_claimable}')
+  tx = payout.claim(alice, { 'from': alice, 'gas_price': gas_strategy })
+  print(tx.events)
+  assert tx.events['Claim']['amount'] == alice_claimable
+  print(f'====> block height {chain.height}')
+  print(f'***** epoch number {payout.getCurrentEpoch()}') 
+
+  # 5: can claim at next epoch {epoch 1}
+  payout.addDistributor(distributor, {'from': admin, 'gas_price': gas_strategy})
+  flex.transfer(distributor, 1e18, {'from': admin, 'gas_price': gas_strategy})
+
+  distributor.distribute({'from': admin, 'gas_price': gas_strategy})
+  chain.mine(5)
+  alice_claimable = payout.getClaimable(alice)
+  print(f'alice claimable reward: {alice_claimable}')
+  tx = payout.claim(alice, { 'from': alice, 'gas_price': gas_strategy })
+  print(tx.events)
+  assert tx.events['Claim']['amount'] == alice_claimable
+  print(f'====> block height {chain.height}')
+  print(f'***** epoch number {payout.getCurrentEpoch()}')
+
+def test_make_epoch0_short(admin: Account, user_accounts: List[Account], deploy_flex: FLEXCoin, deploy_ve_flex: veFLEX, deploy_daily_payout: DailyPayout, deploy_daily_distributor: Distributor):
+  # 1: test set up
+  flex: FLEXCoin           = deploy_flex
+  ve_flex: veFLEX          = deploy_ve_flex
+  payout: DailyPayout      = deploy_daily_payout
+  distributor: Distributor = deploy_daily_distributor
+  gas_strategy             = ExponentialScalingStrategy('10 gwei', '50 gwei')
+  chain                    = Chain()
+  alice                    = user_accounts[1]
+  flex.transfer(alice, 10*1e18, {'from': admin, 'gas_price': gas_strategy})
+
+  # 2: start block height set short epoch lenght for epoch 0
+  startBlockHeight: int   = chain.height
+  print(f'epoch starts at block height: {startBlockHeight}')
+  payout.setStartBlockHeight(startBlockHeight, {'from': admin, 'gas_price': gas_strategy})
+  payout.setInitEpochBlockLength(5, { 'from': admin, 'gas_price': gas_strategy })
+  print(f'====> block height {chain.height}')
+  print(f'***** epoch number {payout.getCurrentEpoch()}')
+
+  # 3: stake some into veFlex from alice at epoch 0
+  unlock_time  = chain.time() + (4 * 365 * 86400) # 4 years in seconds
+  ve_flex.create_lock(flex.balanceOf(alice), unlock_time, { 'from': alice, 'gas_price': gas_strategy })
+  print(f'alice stake at block height {chain.height}')
+  print(f'***** epoch number {payout.getCurrentEpoch()}') 
+
+  # 4: distribute for epoch 0 with very small amount of FLEX
+  payout.addDistributor(distributor, {'from': admin, 'gas_price': gas_strategy})
+  flex.transfer(distributor, 1, {'from': admin, 'gas_price': gas_strategy})
+  distributor.distribute({'from': admin, 'gas_price': gas_strategy})
+  print(f'====> block height {chain.height}')
+  print(f'***** epoch number {payout.getCurrentEpoch()}')
+
+  # 5: change epoch length for next epoch to the desired length
+  payout.setNextEpochLength(10)
+  chain.mine(10) 
+  print(f'====> block height {chain.height}')
+  print(f'***** epoch number {payout.getCurrentEpoch()}')
+
+  # 6: distribute the epoch 1 with stardand award
+  flex.transfer(distributor, 1e18, {'from': admin, 'gas_price': gas_strategy})
+  distributor.distribute({'from': admin, 'gas_price': gas_strategy})
+  flex.transfer(distributor, 1e18, {'from': admin, 'gas_price': gas_strategy})
+  distributor.distribute({'from': admin, 'gas_price': gas_strategy})
+  flex.transfer(distributor, 1e18, {'from': admin, 'gas_price': gas_strategy})
+  distributor.distribute({'from': admin, 'gas_price': gas_strategy})
+  flex.transfer(distributor, 1e18, {'from': admin, 'gas_price': gas_strategy})
+  distributor.distribute({'from': admin, 'gas_price': gas_strategy})
+
+  # 7: claim at epoch 1
+  alice_claimable = payout.getClaimable(alice)
+  print(f'alice claimable reward: {alice_claimable}')
+  tx = payout.claim(alice, { 'from': alice, 'gas_price': gas_strategy })
+  print(tx.events)
+  assert tx.events['Claim']['amount'] == alice_claimable
+  print(f'====> block height {chain.height}')
+  print(f'***** epoch number {payout.getCurrentEpoch()}') 
