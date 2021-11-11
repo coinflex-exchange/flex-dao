@@ -28,7 +28,7 @@ def __init__(_payout: address, _flex: address):
   '''
   @notice Contract may be published by an address that will not be the admin
   @dev It is safe to approve with maxuint256 because all the FLEX is going to payout contract anyway
-  @param _payout address to the Payout contract (DailyPayout / QuarterlyPayout) which implements `distribute(_amount: uint256)
+  @param _payout address to the Payout contract (DailyPayout) which implements `distribute(_amount: uint256)
   @param _flex address to the FLEX Token; Pending removal during production as it can be defined as a constant
   '''
   assert _payout != ZERO_ADDRESS, 'Payout contract cannot be null address' # dev: payout null

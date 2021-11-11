@@ -15,10 +15,9 @@ contract DailyPayout is Ownable
   /* =========  MEMBER VARS ========== */
   IERC20 immutable public token;  // FLEX token
   IVested immutable public vested; // veFLEX
-  uint256 public initBlockLength; // 10 is for test and 17280 is average blocks in 1 day with 5s block interval
+  uint256 public constant EPOCH_BLOCKS = 10; // 10 is for test and 17280 is average blocks in 1 day with 5s block interval
   uint256 public startBlockHeight;
   uint256[] public payoutForEpoch;
-  uint256[2][] public epochLengthHistory;
   mapping(address => uint256) public claimedEpoches;
   mapping(address => bool) public isDistributor;
 
@@ -26,7 +25,6 @@ contract DailyPayout is Ownable
   event Claim(address indexed from, uint256 amount, uint256 lastClaimedEpoch, uint256 endingEpoch);
   event IsDistributor(address indexed account, bool status);
   event Distribute(address distributor, uint256 amount);
-  event SetEpochLength(uint256 startEpoch, uint256 blocks);
   /* ========== CONSTRUCTOR ========== */
   constructor(address tknAddr, address veAddr)
   {
@@ -49,45 +47,6 @@ contract DailyPayout is Ownable
   function setStartBlockHeight(uint256 blockHeight) public onlyOwner {
     require(startBlockHeight == 0, "start block height already set!");
     startBlockHeight = blockHeight;
-  }
-
-  function setInitEpochBlockLength(uint256 blockLength) public onlyOwner {
-    require(blockLength != 0, "canot set 0 as epoch block length!");
-    require(initBlockLength == 0, "init block length already set!");
-    initBlockLength = blockLength;
-    epochLengthHistory.push([0, initBlockLength]);
-  }
-
- /**
-  * @dev
-  *   Only necessary in chain average block interval changes.
-  *   Adjust epoch length in case the blockchain hash rate changes.
-  */
-  function setNextEpochLength(uint256 blocks) external onlyOwner {
-    uint256 lastEpochBlockLen = epochLengthHistory[epochLengthHistory.length - 1][1];
-    require(blocks != 0, '0 blocks is not a valid epoch length');
-    require(blocks != lastEpochBlockLen, 'epoch length is the same with last epoch length');
-    uint256 startEpoch = _getCurrentEpoch() + 1;
-    epochLengthHistory.push([startEpoch, blocks]);
-    emit SetEpochLength(startEpoch, blocks);
-  }
-
- /**
-  * @dev
-  *   Only necessary in chain average block interval changes.
-  *   Can only update the length of the next epoch 
-  *   while you are in the same epoch of calling 
-  *   setNextEpochLength func.
-  */
-  function updateLastEpochLength(uint256 blocks) external onlyOwner {
-    uint256 currentEpoch = _getCurrentEpoch();
-    uint256 lastEpochInEpochLengthHistory = epochLengthHistory[epochLengthHistory.length - 1][0];
-    require(lastEpochInEpochLengthHistory == currentEpoch + 1, 'can only update next epoch length');
-    uint256 lastEpochBlockLen = epochLengthHistory[epochLengthHistory.length - 1][1];
-    require(blocks != 0, '0 blocks is not a valid epoch length');
-    require(blocks != lastEpochBlockLen, 'epoch length is the same with last epoch length');
-    epochLengthHistory[epochLengthHistory.length - 1][1] = blocks;
-    emit SetEpochLength(epochLengthHistory[epochLengthHistory.length - 1][0], blocks);
   }
 
   function distribute(uint256 amount) external {
@@ -171,34 +130,13 @@ contract DailyPayout is Ownable
   *   If chain block interval changes, function will handle variable epoch lengths.
   */
   function _getEpochStartBlockHeight(uint256 epoch) internal view returns(uint256) {
-    if (epochLengthHistory.length == 1) {
-      return startBlockHeight.add(initBlockLength.mul(epoch));
-    } else {
-      uint256 epochBlockHeight = startBlockHeight;
-      uint256 epochLength;
-      uint256 epochEnd;
-      for (uint256 i = epochLengthHistory.length - 1; i >= 0; i--) {
-        if (epoch > epochLengthHistory[i][0]) {
-          epochEnd = epochLengthHistory[i][0];
-          epochLength = epochLengthHistory[i][1];
-          epochBlockHeight = epochBlockHeight.add(epochLength.mul(epoch.sub(epochEnd)));
-          epoch = epochEnd;
-        }
-        if(i == 0) break;
-      }
-      return epochBlockHeight;
-    }
+    return startBlockHeight.add(EPOCH_BLOCKS.mul(epoch));
   }
 
  /**
   * @dev This is the actual current epoch.
   */
   function _getCurrentEpoch() internal view returns(uint256) {
-    uint256 epoch = 0;
-    while(true) {
-      if (block.number < _getEpochStartBlockHeight(epoch)) break;
-      epoch++;
-    }
-    return epoch - 1;
+    return (block.number - startBlockHeight).div(EPOCH_BLOCKS);
   }
 }

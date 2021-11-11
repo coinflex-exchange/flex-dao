@@ -67,7 +67,6 @@ def test_claim_calls(admin: Account, user_accounts: List[Account], deploy_flex: 
 
   ### Sets Payout StartTime ###
   payout.setStartBlockHeight(chain.height, { 'from': admin, 'gas_price': gas_strategy })
-  payout.setInitEpochBlockLength(10, { 'from': admin, 'gas_price': gas_strategy })
   ### Chain travel ###
   chain.mine(5)
   
@@ -103,7 +102,6 @@ def test_dailyPayout_integration_with_distributor(admin: Account, user_accounts:
   print(f'epoch starts at block height: {startBlockHeight}')
   payout.setStartBlockHeight(startBlockHeight, {'from': admin, 'gas_price': gas_strategy})
   # 3.1: set init epoch block length as 10
-  payout.setInitEpochBlockLength(10, { 'from': admin, 'gas_price': gas_strategy })
   print(f'====> block height {chain.height}')
   print(f'***** epoch number {payout.getCurrentEpoch()}')
   assert payout.startBlockHeight() == startBlockHeight
@@ -152,18 +150,9 @@ def test_dailyPayout_integration_with_distributor(admin: Account, user_accounts:
   print(f'block number: {chain.height}')
   print(f'***** epoch number {payout.getCurrentEpoch()}')
 
-  # 7: change next epoch block length from 10 to 20
-  payout.setNextEpochLength(20)
-
   # 7: chain tranvel
   print(f'chain travelling: {10 * EPOCH_BLOCKS} blocks')
   chain.mine(100)
-  print(f'block number: {chain.height}')
-  print(f'***** epoch number {payout.getCurrentEpoch()}')
-
-  # 7: change next epoch block length from 20 to 1
-  payout.setNextEpochLength(1)
-  chain.mine(20)
   print(f'block number: {chain.height}')
   print(f'***** epoch number {payout.getCurrentEpoch()}')
 
@@ -189,7 +178,6 @@ def test_epoch0_is_not_claimable(admin: Account, user_accounts: List[Account], d
   startBlockHeight: int   = chain.height
   print(f'epoch starts at block height: {startBlockHeight}')
   payout.setStartBlockHeight(startBlockHeight, {'from': admin, 'gas_price': gas_strategy})
-  payout.setInitEpochBlockLength(10, { 'from': admin, 'gas_price': gas_strategy })
   print(f'====> block height {chain.height}')
   print(f'***** epoch number {payout.getCurrentEpoch()}')
 
@@ -226,60 +214,3 @@ def test_epoch0_is_not_claimable(admin: Account, user_accounts: List[Account], d
   assert tx.events['Claim']['amount'] == alice_claimable
   print(f'====> block height {chain.height}')
   print(f'***** epoch number {payout.getCurrentEpoch()}')
-
-def test_make_epoch0_short(admin: Account, user_accounts: List[Account], deploy_flex: FLEXCoin, deploy_ve_flex: veFLEX, deploy_daily_payout: DailyPayout, deploy_daily_distributor: Distributor):
-  # 1: test set up
-  flex: FLEXCoin           = deploy_flex
-  ve_flex: veFLEX          = deploy_ve_flex
-  payout: DailyPayout      = deploy_daily_payout
-  distributor: Distributor = deploy_daily_distributor
-  gas_strategy             = ExponentialScalingStrategy('10 gwei', '50 gwei')
-  chain                    = Chain()
-  alice                    = user_accounts[1]
-  flex.transfer(alice, 10*1e18, {'from': admin, 'gas_price': gas_strategy})
-
-  # 2: start block height set short epoch lenght for epoch 0
-  startBlockHeight: int   = chain.height
-  print(f'epoch starts at block height: {startBlockHeight}')
-  payout.setStartBlockHeight(startBlockHeight, {'from': admin, 'gas_price': gas_strategy})
-  payout.setInitEpochBlockLength(5, { 'from': admin, 'gas_price': gas_strategy })
-  print(f'====> block height {chain.height}')
-  print(f'***** epoch number {payout.getCurrentEpoch()}')
-
-  # 3: stake some into veFlex from alice at epoch 0
-  unlock_time  = chain.time() + (4 * 365 * 86400) # 4 years in seconds
-  ve_flex.create_lock(flex.balanceOf(alice), unlock_time, { 'from': alice, 'gas_price': gas_strategy })
-  print(f'alice stake at block height {chain.height}')
-  print(f'***** epoch number {payout.getCurrentEpoch()}') 
-
-  # 4: distribute for epoch 0 with very small amount of FLEX
-  payout.addDistributor(distributor, {'from': admin, 'gas_price': gas_strategy})
-  flex.transfer(distributor, 1, {'from': admin, 'gas_price': gas_strategy})
-  distributor.distribute({'from': admin, 'gas_price': gas_strategy})
-  print(f'====> block height {chain.height}')
-  print(f'***** epoch number {payout.getCurrentEpoch()}')
-
-  # 5: change epoch length for next epoch to the desired length
-  payout.setNextEpochLength(10)
-  chain.mine(10) 
-  print(f'====> block height {chain.height}')
-  print(f'***** epoch number {payout.getCurrentEpoch()}')
-
-  # 6: distribute the epoch 1 with stardand award
-  flex.transfer(distributor, 1e18, {'from': admin, 'gas_price': gas_strategy})
-  distributor.distribute({'from': admin, 'gas_price': gas_strategy})
-  flex.transfer(distributor, 1e18, {'from': admin, 'gas_price': gas_strategy})
-  distributor.distribute({'from': admin, 'gas_price': gas_strategy})
-  flex.transfer(distributor, 1e18, {'from': admin, 'gas_price': gas_strategy})
-  distributor.distribute({'from': admin, 'gas_price': gas_strategy})
-  flex.transfer(distributor, 1e18, {'from': admin, 'gas_price': gas_strategy})
-  distributor.distribute({'from': admin, 'gas_price': gas_strategy})
-
-  # 7: claim at epoch 1
-  alice_claimable = payout.getClaimable(alice)
-  print(f'alice claimable reward: {alice_claimable}')
-  tx = payout.claim(alice, { 'from': alice, 'gas_price': gas_strategy })
-  print(tx.events)
-  assert tx.events['Claim']['amount'] == alice_claimable
-  print(f'====> block height {chain.height}')
-  print(f'***** epoch number {payout.getCurrentEpoch()}') 

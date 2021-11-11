@@ -58,7 +58,7 @@ def test_claim_calls(admin: Account, user_accounts: List[Account], deploy_flex: 
   print(f'veFLEX Balance: { ve_flex.balanceOf(claimant) }')
   ### Sets Payout StartTime ###
   payout.setStartBlockHeight(chain.height, { 'from': admin, 'gas_price': gas_strategy })
-  payout.setInitEpochBlockLength(10, { 'from': admin, 'gas_price': gas_strategy })
+  
   ### Chain travel ###
   chain.mine(5) # after 1 epoch
   ### Claim ###
