@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.7
 # coding:utf-8
 # Copyright (C) 2019-2021 All rights reserved.
-# FILENAME:  deploy-ve-flex.py
+# FILENAME:  deploy-distributor.py
 # VERSION: 	 1.0
 # CREATED: 	 2021-06-13 17:37
 # AUTHOR: 	 Aekasitt Guruvanich <sitt@coinflex.com>
@@ -10,7 +10,7 @@
 # HISTORY:
 #*************************************************************
 ### Project Contract(s) ###
-from brownie import veFLEX
+from brownie import Distributor
 ### Third-Party Packages ###
 from brownie.convert import Wei
 from brownie.network import accounts, Chain
@@ -30,9 +30,10 @@ def main(gas_speed: str = 'standard'):
     1: None,              # mainnet
     42: 'kovan',          # kovan testnet
     1337: 'dev',          # local ganache-cli evm
-    10001: 'smartbch-amber' # smartbch testnet
+    10001: 'smartbch-amber', # smartbch testnet
+    10000: 'smartbch-mainnet'
   }
-  if chain._chainid in (1, 42, 1337, 10001):
+  if chain._chainid in (1, 42, 1337, 10001,10000):
     chain_name = chain_map[chain._chainid]
     file_name = 'wallet.yml' if chain_name is None else f'wallet.{chain_name}.yml'
     ### Load Mnemonic from YAML File ###
@@ -63,36 +64,45 @@ def main(gas_speed: str = 'standard'):
     return # If balance is zero, exits
 
   ### Loads Deployment Parameters ###
-  token: str   = None
+  payout: str   = None
+  flex: str  = None
   name: str    = None
-  symbol: str  = None
-  version: str = None
+  
   try:
-    with open('params/ve-flex.yml', 'rb') as dep:
-      params: dict = safe_load(dep)
-      token        = params.get('token', None)
-      name         = params.get('name', None)
-      symbol       = params.get('symbol', None)
-      version      = params.get('version', None)
-      if token is None or not isinstance(token, str) or len(token) < 1:
-        print(f'{TERM_RED}Invalid `token` parameter found in `params/ve-flex.yml` file.{TERM_NFMT}')
+    with open('params/distributor.yml', 'rb') as dep:
+      params: dict       = safe_load(dep)
+      flex               = params.get('flex', None)
+      payout_daily       = params.get('payout_daily', None)
+      name_daily         = params.get('name_daily', None)
+      payout_quarterly   = params.get('payout_quarterly', None)
+      name_quarterly     = params.get('name_quarterly', None)
+
+      if payout_daily is None or not isinstance(payout_daily, str) or len(payout_daily) < 1:
+        print(f'{TERM_RED}Invalid `payout_daily` parameter found in `params/distributor.yml` file.{TERM_NFMT}')
         return
-      elif name is None or not isinstance(name, str) or len(name) < 1:
-        print(f'{TERM_RED}Invalid `name` parameter found in `params/ve-flex.yml` file.{TERM_NFMT}')
+      elif name_daily is None or not isinstance(name_daily, str) or len(name_daily) < 1:
+        print(f'{TERM_RED}Invalid `name_daily` parameter found in `params/distributor.yml` file.{TERM_NFMT}')
         return
-      elif symbol is None or not isinstance(symbol, str) or len(symbol) < 1:
-        print(f'{TERM_RED}Invalid `symbol` parameter found in `params/ve-flex.yml` file.{TERM_NFMT}')
+      elif payout_quarterly is None or not isinstance(payout_quarterly, str) or len(payout_quarterly) < 1:
+        print(f'{TERM_RED}Invalid `payout_quarterly` parameter found in `params/distributor.yml` file.{TERM_NFMT}')
         return
-      elif version is None or not isinstance(version, str) or len(version) < 1:
-        print(f'{TERM_RED}Invalid `version` parameter found in `params/ve-flex.yml` file.{TERM_NFMT}')
+      elif name_quarterly is None or not isinstance(name_quarterly, str) or len(name_quarterly) < 1:
+        print(f'{TERM_RED}Invalid `name_quarterly` parameter found in `params/distributor.yml` file.{TERM_NFMT}')
+        return
+      elif flex is None or not isinstance(flex, str) or len(flex) < 1:
+        print(f'{TERM_RED}Invalid `flex` parameter found in `params/distributor.yml` file.{TERM_NFMT}')
         return
   except FileNotFoundError:
-    print(f'{TERM_RED}Cannot find `params/ve-flex.yml` file containing deployment parameters.{TERM_NFMT}')
+    print(f'{TERM_RED}Cannot find `params/distributor.yml` file containing deployment parameters.{TERM_NFMT}')
     return
 
   ### Set Gas Price ##
   gas_strategy = ExponentialScalingStrategy('10 gwei', '50 gwei')
 
-  ### Deployment ###
-  ve_flex = veFLEX.deploy(token, name, symbol, version, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'veFLEX: { ve_flex }')
+  ### Deployment daily ###
+  distributor_daily = Distributor.deploy(payout_daily, flex , name_daily, { 'from': acct, 'gas_price': gas_strategy })
+  print(f'distributor daily: { distributor_daily }')
+
+  ### Deployment quarterly###
+  distributor_quarterly = Distributor.deploy(payout_quarterly, flex , name_quarterly, { 'from': acct, 'gas_price': gas_strategy })
+  print(f'distributor quarterly: { distributor_quarterly }')

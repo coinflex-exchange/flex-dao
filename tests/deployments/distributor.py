@@ -36,7 +36,7 @@ def deploy_daily_distributor(admin: Account, deploy_flex: FLEXCoin, deploy_daily
   payout: DailyPayout = deploy_daily_payout
   gas_strategy        = ExponentialScalingStrategy('10 gwei', '50 gwei')
   ### Deployment ###
-  return Distributor.deploy(payout, flex, { 'from': admin, 'gas_price': gas_strategy })
+  return Distributor.deploy(payout, flex, 'Daily Payout Distributor', { 'from': admin, 'gas_price': gas_strategy })
 
 def test_deploy_daily_distributor(admin: Account, deploy_flex: FLEXCoin, deploy_daily_payout: DailyPayout):
   '''
@@ -51,5 +51,6 @@ def test_deploy_daily_distributor(admin: Account, deploy_flex: FLEXCoin, deploy_
   payout: DailyPayout      = deploy_daily_payout
   gas_strategy             = ExponentialScalingStrategy('10 gwei', '50 gwei')
   ### Deployment ###
-  distributor: Distributor = Distributor.deploy(payout, flex, { 'from': admin, 'gas_price': gas_strategy })
+  distributor: Distributor = Distributor.deploy(payout, flex, 'Daily Payout Distributor', { 'from': admin, 'gas_price': gas_strategy })
   print(f'Distributor: { distributor }')
+  assert distributor.name() == 'Daily Payout Distributor'

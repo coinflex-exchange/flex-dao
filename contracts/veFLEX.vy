@@ -1,4 +1,4 @@
-# @version ^0.2.4
+# @version ^0.2.16
 '''
 @title CoinFLEX Voting Escrow
 @author CoinFLEX
@@ -602,3 +602,12 @@ def totalSupplyAt(_block: uint256) -> uint256:
       dt = (_block - point.blk) * (block.timestamp - point.ts) / (block.number - point.blk)
   # Now dt contains info on how far are we beyond point
   return self.supply_at(point, point.ts + dt)
+
+# Dummy methods for compatibility with Aragon
+@external
+def changeController(_newController: address):
+  '''
+  @dev Dummy method required for Aragon compatibility
+  '''
+  assert msg.sender == self.controller
+  self.controller = _newController

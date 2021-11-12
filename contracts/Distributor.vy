@@ -14,6 +14,7 @@ interface PayoutContract:
 admin: public(address)  # Account which can trigger the distribution of FLEX tokens from this contract
 payout: public(address) # The receiving Payout Contract (Daily/Quarterly) to receive the FLEX tokens
 flex: public(address)   # Address of the FLEX token, replaced by constant at production
+name: public(String[64])    # The name of the distributor
 
 ### Constants ###
 # FLEX: constant(address) = 0x98Dd7eC28FB43b3C4c770AE532417015fa939Dd3
@@ -24,7 +25,7 @@ event OwnershipTransferred:
   currAdmin: address
 
 @external
-def __init__(_payout: address, _flex: address):
+def __init__(_payout: address, _flex: address, _name: String[64]):
   '''
   @notice Contract may be published by an address that will not be the admin
   @dev It is safe to approve with maxuint256 because all the FLEX is going to payout contract anyway
@@ -36,6 +37,7 @@ def __init__(_payout: address, _flex: address):
   self.admin      = msg.sender
   self.payout     = _payout
   self.flex       = _flex
+  self.name       = _name
   assert ERC20(_flex).approve(_payout, MAX_UINT256), 'Unable to max approve FLEX tokens for transfers' # dev: approval failed
 
 @external
