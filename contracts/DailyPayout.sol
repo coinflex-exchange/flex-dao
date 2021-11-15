@@ -15,7 +15,7 @@ contract DailyPayout is Ownable
   /* =========  MEMBER VARS ========== */
   IERC20 immutable public token;  // FLEX token
   IVested immutable public vested; // veFLEX
-  uint256 public constant EPOCH_BLOCKS = 10; // 10 is for test and 17280 is average blocks in 1 day with 5s block interval
+  uint256 public constant EPOCH_BLOCKS = 120; // 10 is for test and 17280 is average blocks in 1 day with 5s block interval
   uint256 public startBlockHeight;
   uint256[] public payoutForEpoch;
   mapping(address => uint256) public claimedEpoches;
@@ -120,8 +120,8 @@ contract DailyPayout is Ownable
   function _claimUntilEpoch(address owner, uint256 endingEpoch) internal {
     (uint256 amount, uint256 lastClaimedEpoch) = _getClaimableUntilEpoch(owner, endingEpoch);
     claimedEpoches[owner] = lastClaimedEpoch.add(1);
-    emit Claim(owner, amount, lastClaimedEpoch, endingEpoch);
     if (amount > 0) {
+      emit Claim(owner, amount, lastClaimedEpoch, endingEpoch);
       token.safeTransfer(owner, amount);
     }
   }
@@ -138,6 +138,7 @@ contract DailyPayout is Ownable
   * @dev This is the actual current epoch.
   */
   function _getCurrentEpoch() internal view returns(uint256) {
+    require(block.number >= startBlockHeight, 'the payout contract is not started yet');
     return (block.number - startBlockHeight).div(EPOCH_BLOCKS);
   }
-}
+} 
