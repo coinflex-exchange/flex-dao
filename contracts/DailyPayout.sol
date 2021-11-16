@@ -75,7 +75,7 @@ contract DailyPayout is Ownable
 
  /**
   * @dev 
-  *   This is not current epoch, but rather the number of  claimable epochs .
+  *   This is not current epoch, but rather the number of claimable epochs.
   *   Name not changed for the sake of compatibility with former implementation.
   */
   function currentEpoch() public view returns(uint256) {
@@ -98,7 +98,7 @@ contract DailyPayout is Ownable
   }
 
 /**
-  * @dev get current epoch for owner
+  * @dev get current epoch
   */
   function getCurrentEpoch() external view returns(uint256) {
     require(msg.sender == owner() || isOperator[msg.sender], "Not authorized!");
@@ -106,7 +106,7 @@ contract DailyPayout is Ownable
   }
 
 /**
-  * @dev get epoch start block height for owner
+  * @dev get epoch start block height
   */
   function getEpochStartBlockHeight(uint256 epoch) external view returns(uint256) {
     require(msg.sender == owner() || isOperator[msg.sender], "Not authorized!");
@@ -117,7 +117,7 @@ contract DailyPayout is Ownable
 /**
   * @dev 
   *   Rewarded epochs might extend to the future, but can only 
-  *   claim until epochs no later than the current acutal epoch.
+  *   claim until epochs no later than the current actual epoch.
   */
   function _getClaimableUntilEpoch(address owner, uint256 endingEpoch) internal view returns(uint256, uint256) {
     uint256 amount = 0;
