@@ -80,7 +80,7 @@ def addDistributor(_addr: address):
   @param _addr Address to have permission to call distribute function
   '''
   assert msg.sender == self.admin,   'You are not the admin'            # dev: admin only
-  assert _addr      != ZERO_ADDRESS, 'Delegatee address cannot be null' # dev: admin not set
+  assert _addr      != ZERO_ADDRESS, 'Delegatee address cannot be null' # dev: delegatee not set
   self.isDistributor[_addr] = True
   log IsDistributor(_addr, True)
 
@@ -91,6 +91,6 @@ def removeDistributor(_addr: address):
   @param _addr Address to remove permission to call distribute function
   '''
   assert msg.sender == self.admin,   'You are not the admin'            # dev: admin only
-  assert _addr      != ZERO_ADDRESS, 'Delegatee address cannot be null' # dev: admin not set
+  assert _addr      != ZERO_ADDRESS, 'Delegatee address cannot be null' # dev: delegatee not set
   self.isDistributor[_addr] = False
   log IsDistributor(_addr, False)
