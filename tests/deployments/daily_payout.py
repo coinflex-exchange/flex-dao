@@ -10,9 +10,10 @@
 # HISTORY:
 #*************************************************************
 ### Project Contracts ###
-from brownie import FLEXCoin, DailyPayout, veFLEX
+from brownie import FLEXCoin, DailyPayout, veFLEX, reverts
 ### Third-Party Packages ###
 from brownie.network.gas.strategies import ExponentialScalingStrategy
+from brownie.network import Chain
 from eth_account import Account
 from pytest import fixture, mark
 ### Local Modules ###
@@ -52,3 +53,38 @@ def test_deploy_daily_payout(admin: Account, deploy_flex: FLEXCoin, deploy_ve_fl
   ### Deployment ###
   daily_payout: DailyPayout = DailyPayout.deploy(flex, ve_flex, { 'from': admin, 'gas_price': gas_strategy })
   print(f'DailyPayout: { daily_payout }')
+
+def test_operator(admin: Account, user_accounts: List[Account], deploy_daily_payout: DailyPayout):
+  payout: DailyPayout      = deploy_daily_payout
+  alice: Account           = user_accounts[0]
+  bob: Account             = user_accounts[1]
+  chain                    = Chain()
+
+  # add or remove operator test
+  tx = payout.addOperator(alice)
+  assert payout.isOperator(alice) == True
+  assert payout.isOperator(bob) == False
+  assert tx.events['IsOperator']['account'] == alice
+  assert tx.events['IsOperator']['status'] == True
+  
+  tx = payout.removeOperator(alice)
+  assert payout.isOperator(alice) == False
+  assert tx.events['IsOperator']['account'] == alice
+  assert tx.events['IsOperator']['status'] == False
+
+  # admin and operator can call getCurrentEpoch and getEpochStartBlockHeight
+  payout.setStartBlockHeight(chain.height)
+  payout.addOperator(alice)
+  
+  # for admin
+  payout.getCurrentEpoch()
+  payout.getEpochStartBlockHeight(0)
+
+  # for operator
+  payout.getCurrentEpoch({'from': alice})
+  payout.getEpochStartBlockHeight(0, {'from': alice})
+
+  # for non admin or non operator
+  with reverts('Not authorized!'):
+    payout.getCurrentEpoch({'from': bob})
+    payout.getEpochStartBlockHeight(0, {'from': bob})

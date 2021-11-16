@@ -10,7 +10,7 @@
 # HISTORY:
 #*************************************************************
 ### Project Contracts ###
-from brownie import FLEXCoin, DailyPayout, Distributor
+from brownie import FLEXCoin, DailyPayout, Distributor, reverts
 ### Third-Party Packages ###
 from brownie.network.gas.strategies import ExponentialScalingStrategy
 from eth_account import Account
@@ -20,6 +20,7 @@ from tests import *
 from .daily_payout import deploy_daily_payout
 from .flex import deploy_flex
 from .ve_flex import deploy_ve_flex # used by `deploy_daily_payout` and `deploy_quarterly_payout`
+from typing import List
 
 @fixture
 def deploy_daily_distributor(admin: Account, deploy_flex: FLEXCoin, deploy_daily_payout: DailyPayout) -> Distributor:
@@ -54,3 +55,41 @@ def test_deploy_daily_distributor(admin: Account, deploy_flex: FLEXCoin, deploy_
   distributor: Distributor = Distributor.deploy(payout, flex, 'Daily Payout Distributor', { 'from': admin, 'gas_price': gas_strategy })
   print(f'Distributor: { distributor }')
   assert distributor.name() == 'Daily Payout Distributor'
+
+def test_distributor(deploy_daily_distributor: Distributor, admin: Account, user_accounts: List[Account], deploy_flex: FLEXCoin, deploy_daily_payout: DailyPayout):
+  distributor: Distributor = deploy_daily_distributor
+  flex: FLEXCoin           = deploy_flex
+  payout: DailyPayout      = deploy_daily_payout
+  alice: Account           = user_accounts[0]
+  bob: Account             = user_accounts[1]
+  
+  # 1: basic add and remove test of delegator
+  tx = distributor.addDistributor(alice)
+  assert distributor.isDistributor(alice) == True
+  assert distributor.isDistributor(bob) == False
+  assert tx.events['IsDistributor']['distributor'] == alice
+  assert tx.events['IsDistributor']['status'] == True
+
+  tx= distributor.removeDistributor(alice)
+  assert distributor.isDistributor(alice) == False
+  assert tx.events['IsDistributor']['distributor'] == alice
+  assert tx.events['IsDistributor']['status'] == False
+
+  # 2: admin and delegator can distribute while others cannot
+  with reverts('You must transfer more than zero FLEX'):
+    distributor.distribute({'from': admin})
+  
+  distributor.addDistributor(alice)
+  with reverts('You must transfer more than zero FLEX'):
+    distributor.distribute({'from': alice})  
+
+  with reverts('You are not the admin or valid delegatee'):
+    distributor.distribute({'from': bob})
+
+  # 3: distribute event test
+  amount = 1e18
+  flex.transfer(distributor, amount, {'from': admin})
+  payout.addDistributor(distributor, {'from': admin})
+  tx = distributor.distribute({'from': admin})
+  assert tx.events['CallDistribute']['distributor'] == admin
+  assert tx.events['CallDistribute']['amount'] == amount

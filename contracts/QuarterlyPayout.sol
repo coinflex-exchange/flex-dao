@@ -20,10 +20,12 @@ contract QuarterlyPayout is Ownable
   uint256[] public payoutForEpoch;
   mapping(address => uint256) public claimedEpoches;
   mapping(address => bool) public isDistributor;
+  mapping(address => bool) public isOperator;
 
   /* ===========   EVENTS  =========== */
   event Claim(address indexed from, uint256 amount, uint256 lastClaimedEpoch, uint256 endingEpoch);
   event IsDistributor(address indexed account, bool status);
+  event IsOperator(address indexed account, bool status);
   event Distribute(address distributor, uint256 amount);
   /* ========== CONSTRUCTOR ========== */
   constructor(address tknAddr, address veAddr)
@@ -35,23 +37,37 @@ contract QuarterlyPayout is Ownable
   }
 
   function addDistributor(address account) public onlyOwner {
+    require(account != address(0), 'Account address cannot be zero');
     isDistributor[account] = true;
     emit IsDistributor(account, true);
   }
 
   function removeDistributor(address account) public onlyOwner {
+    require(account != address(0), 'Account address cannot be zero');
     isDistributor[account] = false;
     emit IsDistributor(account, false);
   }
 
+  function addOperator(address account) public onlyOwner {
+    require(account != address(0), 'Account address cannot be zero');
+    isOperator[account] = true;
+    emit IsOperator(account, true);
+  }
+
+  function removeOperator(address account) public onlyOwner {
+    require(account != address(0), 'Account address cannot be zero');
+    isOperator[account] = false;
+    emit IsOperator(account, false);
+  }
+
   function setStartBlockHeight(uint256 blockHeight) public onlyOwner {
-    require(startBlockHeight == 0, "start block height already set!");
+    require(startBlockHeight == 0, "Start block height already set!");
     startBlockHeight = blockHeight;
   }
 
   function distribute(uint256 amount) external {
-    require(msg.sender == owner() || isDistributor[msg.sender], "distributor not authorized!");
-    require(amount > 0, "amount to be distributed must be greater than zero!");
+    require(msg.sender == owner() || isDistributor[msg.sender], "Distributor not authorized!");
+    require(amount > 0, "Amount to be distributed must be greater than zero!");
     payoutForEpoch.push(amount);
     emit Distribute(msg.sender, amount);
     token.safeTransferFrom(msg.sender, address(this), amount);
@@ -67,7 +83,7 @@ contract QuarterlyPayout is Ownable
   }
 
   function claim(address owner) external {
-    require(owner == msg.sender, "can only claim for own account");
+    require(owner == msg.sender, "Can only claim for own account");
     uint256 epoch = currentEpoch();
     if (epoch > 0) {
       _claimUntilEpoch(owner, epoch.sub(1));
@@ -84,14 +100,16 @@ contract QuarterlyPayout is Ownable
 /**
   * @dev get current epoch for owner
   */
-  function getCurrentEpoch() external view onlyOwner returns(uint256) {
+  function getCurrentEpoch() external view returns(uint256) {
+    require(msg.sender == owner() || isOperator[msg.sender], "Not authorized!");
     return _getCurrentEpoch();
   }
 
 /**
   * @dev get epoch start block height for owner
   */
-  function getEpochStartBlockHeight(uint256 epoch) external view onlyOwner returns(uint256) {
+  function getEpochStartBlockHeight(uint256 epoch) external view returns(uint256) {
+    require(msg.sender == owner() || isOperator[msg.sender], "Not authorized!");
     return _getEpochStartBlockHeight(epoch);
   }
 
@@ -120,8 +138,8 @@ contract QuarterlyPayout is Ownable
   function _claimUntilEpoch(address owner, uint256 endingEpoch) internal {
     (uint256 amount, uint256 lastClaimedEpoch) = _getClaimableUntilEpoch(owner, endingEpoch);
     claimedEpoches[owner] = lastClaimedEpoch.add(1);
-    emit Claim(owner, amount, lastClaimedEpoch, endingEpoch);
     if (amount > 0) {
+      emit Claim(owner, amount, lastClaimedEpoch, endingEpoch);
       token.safeTransfer(owner, amount);
     }
   }
@@ -138,6 +156,7 @@ contract QuarterlyPayout is Ownable
   * @dev This is the actual current epoch.
   */
   function _getCurrentEpoch() internal view returns(uint256) {
+    require(block.number >= startBlockHeight, 'The payout contract is not started yet');
     return (block.number - startBlockHeight).div(EPOCH_BLOCKS);
   }
-}
+} 
