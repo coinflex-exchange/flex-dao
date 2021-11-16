@@ -69,7 +69,7 @@ def main():
   symbol: str  = None
   version: str = None
   try:
-    with open('params/integration.yml', 'rb') as dep:
+    with open('params/integration-fixed.yml', 'rb') as dep:
       params: dict              = safe_load(dep)
       flex                      = params.get('flex', None)
       
@@ -78,10 +78,12 @@ def main():
       version                   = params.get('version', None)
       
       start_block_height        = params.get('start_block_height', None)
-      # initial_epoch_block_len   = params.get('initial_epoch_block_len', None)
+      operator                  = params.get('operator', None)
       
       name_daily                = params.get('name_daily', None)
       name_quarterly            = params.get('name_quarterly', None)
+      delegatee                 = params.get('delegatee', None) 
+
 
       if flex is None or not isinstance(flex, str) or len(flex) < 1:
         print(f'{TERM_RED}Invalid `flex` parameter found in `params/interation.yml` file.{TERM_NFMT}')
@@ -98,13 +100,16 @@ def main():
       elif start_block_height is None or not isinstance(start_block_height, int):
         print(f'{TERM_RED}Invalid `start_block_height` parameter found in `params/interation.yml` file.{TERM_NFMT}')
         return
-      # elif initial_epoch_block_len is None or not isinstance(initial_epoch_block_len, int):
-      #   print(f'{TERM_RED}Invalid `initial_epoch_block_len` parameter found in `params/interation.yml` file.{TERM_NFMT}')
-      #   return
+      elif operator is None or not isinstance(operator, str) or len(operator) < 1:
+        print(f'{TERM_RED}Invalid `operator` parameter found in `params/interation.yml` file.{TERM_NFMT}')
+        return
       elif name_daily is None or not isinstance(name_daily, str) or len(name_daily) < 1:
         print(f'{TERM_RED}Invalid `name_daily` parameter found in `params/interation.yml` file.{TERM_NFMT}')
         return
       elif name_quarterly is None or not isinstance(name_quarterly, str) or len(name_quarterly) < 1:
+        print(f'{TERM_RED}Invalid `name_quarterly` parameter found in `params/interation.yml` file.{TERM_NFMT}')
+        return
+      elif delegatee is None or not isinstance(delegatee, str) or len(delegatee) < 1:
         print(f'{TERM_RED}Invalid `name_quarterly` parameter found in `params/interation.yml` file.{TERM_NFMT}')
         return
   except FileNotFoundError:
@@ -114,56 +119,71 @@ def main():
   ### Set Gas Price ##
   gas_strategy = ExponentialScalingStrategy('10 gwei', '50 gwei')
 
-  ### Deploy veFLEX ###
+  ### 1. Deploy veFLEX ###
   ve_flex = veFLEX.deploy(flex, name, symbol, version, { 'from': acct, 'gas_price': gas_strategy })
   print(f'veFLEX: { ve_flex } at block height {ve_flex.tx.block_number}')
 
   if start_block_height <= ve_flex.tx.block_number:
     print(f'{TERM_RED}Aborting deployment, the payout start block height should be bigger than veFlex contract deployment block height.{TERM_NFMT}')
     return
-  ### Deploy Daily Payout ###
+
+  ### 2. Deploy Daily Payout ###
   daily_payout = DailyPayout.deploy(flex, ve_flex, { 'from': acct, 'gas_price': gas_strategy })
   print(f'DailyPayout: { daily_payout }')
 
-  ### Set Start time ###
+  ### 3. Set Start block height ###
   daily_payout.setStartBlockHeight(start_block_height, { 'from': acct, 'gas_price': gas_strategy })
   print(f'Start block height: { daily_payout.startBlockHeight() }') 
-  # daily_payout.setInitEpochBlockLength(initial_epoch_block_len, { 'from': acct, 'gas_price': gas_strategy })
-  # print(f'Initial epoch block length: { daily_payout.epochLengthHistory(0,1) }') 
 
-  ### Deploy Quarterly Payout ###
+  ### 4. Add operator ###
+  daily_payout.addOperator(operator, { 'from': acct, 'gas_price': gas_strategy })
+  print(f'Daily payout added an operator: {operator}')
+
+  ### 5. Deploy Quarterly Payout ###
   quarterly_payout = QuarterlyPayout.deploy(flex, ve_flex, { 'from': acct, 'gas_price': gas_strategy })
   print(f'QuarterlyPayout: { quarterly_payout }')
 
-  ### Set Start time ###
+  ### 6. Set Start block height ###
   quarterly_payout.setStartBlockHeight(start_block_height, { 'from': acct, 'gas_price': gas_strategy })
   print(f'Start time: { quarterly_payout.startBlockHeight() }') 
-  # quarterly_payout.setInitEpochBlockLength(initial_epoch_block_len, { 'from': acct, 'gas_price': gas_strategy })
-  # print(f'Initial epoch block length: { quarterly_payout.epochLengthHistory(0,1) }') 
-  
-  ### Deploy Daily Distributor ###
+
+  ### 7. Add operator ###
+  quarterly_payout.addOperator(operator, { 'from': acct, 'gas_price': gas_strategy })
+  print(f'Quarterly payout added an operator: {operator}')
+
+  ### 8. Deploy Daily Distributor ###
   distributor_daily = Distributor.deploy(daily_payout, flex , name_daily, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'distributor daily: { distributor_daily }')
+  print(f'Distributor daily: { distributor_daily }')
 
-  ### Add daily distributor into whitelist of daily payout ###
+  ### 9. Add daily distributor into whitelist of daily payout ###
   daily_payout.addDistributor(distributor_daily, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'enable distributor {distributor_daily} in daily payout {daily_payout}')
+  print(f'Enable distributor {distributor_daily} in daily payout {daily_payout}')
 
-  ### Deployment Quarterly Distributor ###
+  ### 10. Add additional delegatee for distributor ###
+  distributor_daily.addDistributor(delegatee, { 'from': acct, 'gas_price': gas_strategy })
+  print(f'Daily distributor added an delegatee: {delegatee}')
+
+  ### 11. Deployment Quarterly Distributor ###
   distributor_quarterly = Distributor.deploy(quarterly_payout, flex , name_quarterly, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'distributor quarterly: { distributor_quarterly }')
+  print(f'Distributor quarterly: { distributor_quarterly }')
 
-  ### Add Quarterly distributor into whitelist of Quarterly payout ###
+  ### 12. Add Quarterly distributor into whitelist of Quarterly payout ###
   quarterly_payout.addDistributor(distributor_quarterly, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'enable distributor {distributor_quarterly} in quarterly payout {quarterly_payout}')
+  print(f'Enable distributor {distributor_quarterly} in quarterly payout {quarterly_payout}')
+  
+  ### 13. Add additional delegatee for distributor ###
+  distributor_quarterly.addDistributor(delegatee, { 'from': acct, 'gas_price': gas_strategy })
+  print(f'Quarterly distributor added an delegatee: {delegatee}')
 
   print(f'{TERM_RED}###DEPLOYMENT SUMMARY###{TERM_NFMT}')
   print(f'FLEX deployed at: {flex}');
   print(f'veFLEX deployed at: {ve_flex}')
-  print(f'Daily payout deployed at: {daily_payout}')
-  print(f'Quarterly payout deployed at: {quarterly_payout}')
-  print(f'Start time: { start_block_height }') 
-  # print(f'Initial epoch block length: { initial_epoch_block_len }') 
+  print(f'Daily payout deployed at: {daily_payout} with start height: {start_block_height}')
+  print(f'Daily payout added an operator {operator}')
+  print(f'Quarterly payout deployed at: {quarterly_payout} with start height: {start_block_height}')
+  print(f'Quarterly payout added an operator {operator}')
   print(f'Daily distributor deployed at {distributor_daily}')
+  print(f'Daily distributor added a delegatee {delegatee}')
   print(f'Quarterly distributor deployed at {distributor_quarterly}')
+  print(f'Quaterly distributor added a delegatee {delegatee}')
   print(f'{TERM_RED}######END###############{TERM_NFMT}')
