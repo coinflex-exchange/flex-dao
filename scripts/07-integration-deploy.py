@@ -131,47 +131,47 @@ def main():
   daily_payout = DailyPayout.deploy(flex, ve_flex, { 'from': acct, 'gas_price': gas_strategy })
   print(f'DailyPayout: { daily_payout }')
 
-  ### 3. Set Start block height ###
+  ### 2.1. Set Start block height ###
   daily_payout.setStartBlockHeight(start_block_height, { 'from': acct, 'gas_price': gas_strategy })
   print(f'Start block height: { daily_payout.startBlockHeight() }') 
 
-  ### 4. Add operator ###
+  ### 2.2. Add operator ###
   daily_payout.addOperator(operator, { 'from': acct, 'gas_price': gas_strategy })
   print(f'Daily payout added an operator: {operator}')
 
-  ### 5. Deploy Quarterly Payout ###
+  ### 3. Deploy Quarterly Payout ###
   quarterly_payout = QuarterlyPayout.deploy(flex, ve_flex, { 'from': acct, 'gas_price': gas_strategy })
   print(f'QuarterlyPayout: { quarterly_payout }')
 
-  ### 6. Set Start block height ###
+  ### 3.1. Set Start block height ###
   quarterly_payout.setStartBlockHeight(start_block_height, { 'from': acct, 'gas_price': gas_strategy })
   print(f'Start time: { quarterly_payout.startBlockHeight() }') 
 
-  ### 7. Add operator ###
+  ### 3.2. Add operator ###
   quarterly_payout.addOperator(operator, { 'from': acct, 'gas_price': gas_strategy })
   print(f'Quarterly payout added an operator: {operator}')
 
-  ### 8. Deploy Daily Distributor ###
+  ### 4. Deploy mini Daily Distributor ###
   distributor_daily = Distributor.deploy(daily_payout, flex , name_daily, { 'from': acct, 'gas_price': gas_strategy })
   print(f'Distributor daily: { distributor_daily }')
 
-  ### 9. Add daily distributor into whitelist of daily payout ###
+  ### 4.1. Add mini daily distributor into whitelist of daily payout ###
   daily_payout.addDistributor(distributor_daily, { 'from': acct, 'gas_price': gas_strategy })
   print(f'Enable distributor {distributor_daily} in daily payout {daily_payout}')
 
-  ### 10. Add additional delegatee for distributor ###
+  ### 4.2. Add additional delegatee for mini distributor ###
   distributor_daily.addDistributor(delegatee, { 'from': acct, 'gas_price': gas_strategy })
   print(f'Daily distributor added an delegatee: {delegatee}')
 
-  ### 11. Deployment Quarterly Distributor ###
+  ### 5. Deployment mini Quarterly Distributor ###
   distributor_quarterly = Distributor.deploy(quarterly_payout, flex , name_quarterly, { 'from': acct, 'gas_price': gas_strategy })
   print(f'Distributor quarterly: { distributor_quarterly }')
 
-  ### 12. Add Quarterly distributor into whitelist of Quarterly payout ###
+  ### 5.1. Add mini Quarterly distributor into whitelist of Quarterly payout ###
   quarterly_payout.addDistributor(distributor_quarterly, { 'from': acct, 'gas_price': gas_strategy })
   print(f'Enable distributor {distributor_quarterly} in quarterly payout {quarterly_payout}')
   
-  ### 13. Add additional delegatee for distributor ###
+  ### 5.2. Add additional delegatee for mini distributor ###
   distributor_quarterly.addDistributor(delegatee, { 'from': acct, 'gas_price': gas_strategy })
   print(f'Quarterly distributor added an delegatee: {delegatee}')
 
@@ -182,8 +182,8 @@ def main():
   print(f'Daily payout added an operator {operator}')
   print(f'Quarterly payout deployed at: {quarterly_payout} with start height: {start_block_height}')
   print(f'Quarterly payout added an operator {operator}')
-  print(f'Daily distributor deployed at {distributor_daily}')
-  print(f'Daily distributor added a delegatee {delegatee}')
-  print(f'Quarterly distributor deployed at {distributor_quarterly}')
-  print(f'Quaterly distributor added a delegatee {delegatee}')
+  print(f'Mini Daily distributor deployed at {distributor_daily}')
+  print(f'Mini Daily distributor added a delegatee {delegatee}')
+  print(f'Mini Quarterly distributor deployed at {distributor_quarterly}')
+  print(f'Mini Quaterly distributor added a delegatee {delegatee}')
   print(f'{TERM_RED}######END###############{TERM_NFMT}')

@@ -24,6 +24,7 @@ TERM_NFMT = '\033[0;0m'
 def main(gas_speed: str = 'standard'):
   ### Load Account to use ###
   acct: Account = None
+  delegatee: Account = None
   chain: Chain  = Chain()
   print(f'Network Chain-ID: { chain }')
   chain_map = {
@@ -64,6 +65,26 @@ def main(gas_speed: str = 'standard'):
   if balance == 0:
     return # If balance is zero, exits
   
+  # load delegatee address
+  file_name = 'wallet.delegatee.yml'
+  try:
+    with open(file_name) as f:
+      content = safe_load(f)
+      ### Read Mnemonic ###
+      mnemonic = content.get('mnemonic', None)
+      delegatee = accounts.from_mnemonic(mnemonic, count=1)
+  except FileNotFoundError:
+    print(f'{TERM_RED}Cannot find wallet mnemonic file defined at `{file_name}`.{TERM_NFMT}')
+    return
+  except ValidationError:
+    print(f'{TERM_RED}Invalid address found in wallet mnemonic file.{TERM_NFMT}')
+    return
+  print(f'Account: {delegatee}')
+  balance = delegatee.balance()
+  print(f'Account Balance: {balance}')
+  if balance == 0:
+    return # If balance is zero, exits
+
   try:
     with open('params/distribution.yml', 'rb') as dep:
       params: dict                  = safe_load(dep)
@@ -88,6 +109,12 @@ def main(gas_speed: str = 'standard'):
   flex = FLEXCoin.at(flex_addr)
   distributor = Distributor.at(distributor_addr)
   
-  for i in range(10):
-    flex.transfer(distributor, 100e18, {'from': acct, 'gas_price': gas_strategy})
+  for i in range(5):
+
+    # distribute from admin
+    flex.transfer(distributor, 10e18, {'from': acct, 'gas_price': gas_strategy})
     distributor.distribute({'from': acct, 'gas_price': gas_strategy})
+
+    # distribute from delegatee
+    flex.transfer(distributor, 10e18, {'from': delegatee, 'gas_price': gas_strategy})
+    distributor.distribute({'from': delegatee, 'gas_price': gas_strategy})
