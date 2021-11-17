@@ -237,9 +237,9 @@ def test_multi_claim(admin: Account, user_accounts: List[Account], deploy_flex: 
   print(f'***** epoch number {payout.getCurrentEpoch()}')
 
   # 3: stake some into veFlex from alice at epoch 0
-  _4_years  = 1636701131 + (4 * 365 * 86400)
-  _1_years  = 1636701131 + (365 * 86400)
-  _1_month  = 1636701131 + (30 * 86400)
+  _4_years  = chain.time() + (4 * 365 * 86400)
+  _1_years  = chain.time() + (365 * 86400)
+  _1_month  = chain.time() + (30 * 86400)
   ve_flex.create_lock(flex.balanceOf(alice), _4_years, { 'from': alice, 'gas_price': gas_strategy })
   print(f'alice stake 4 years at block height {chain.height}')
   print(f'veFLEX Balance: { ve_flex.balanceOf(alice) }')
