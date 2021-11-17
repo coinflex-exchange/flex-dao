@@ -10,7 +10,8 @@
 # HISTORY:
 #*************************************************************
 ### Project Contracts ###
-from brownie import Controller, FLEXCoin, veFLEX, Timelock
+from brownie import Controller, FLEXCoin, veFLEX, Timelock, reverts
+from brownie.network import Chain
 ### Third-Party Packages ###
 from brownie.network.gas.strategies import ExponentialScalingStrategy
 from eth_account import Account
@@ -53,3 +54,38 @@ def test_deploy_ve_flex(admin: Account, governance: Account, deploy_flex: FLEXCo
   assert ve_flex.name()   == f'vested { flex.name() }'
   assert ve_flex.symbol() == f've{ flex.symbol() }'
   print(f'veFLEX: { ve_flex }')
+
+def test_stake_and_withdraw(admin: Account, deploy_ve_flex: veFLEX):
+  ve_flex = deploy_ve_flex
+  chain   = Chain()
+  
+  # admin stake some flex
+  unlock_time  = chain.time() + (4 * 7 * 86400) # 4 weeks in seconds
+  extent_unlock_time  = chain.time() + (8 * 7 * 86400) # 8 weeks in seconds
+  invalid_unlock_time =  chain.time() + (4 * 366 * 86400) # 4 years and 1 second
+  ve_flex.create_lock(1e18, unlock_time, { 'from': admin, 'gas_price': 1e9 })
+  assert ve_flex.supply() == 1e18
+
+  # increase amount 
+  ve_flex.increase_amount(1e18, { 'from': admin, 'gas_price': 1e9 })
+  assert ve_flex.supply() == 2e18
+
+  # increase unlock_time
+  ve_flex.increase_unlock_time(extent_unlock_time, { 'from': admin, 'gas_price': 1e9 })
+
+  # set invalid unlock time
+  with reverts('Voting lock can be 4 years max'):
+    ve_flex.increase_unlock_time(invalid_unlock_time, { 'from': admin, 'gas_price': 1e9 })
+
+  # time travel
+  chain.sleep(4 * 7 * 86400)
+
+  # withdraw
+  with reverts("The lock didn't expire"):
+    ve_flex.withdraw({ 'from': admin, 'gas_price': 1e9 })
+  
+  # time travel
+  chain.sleep(4 * 7 * 86400)
+    
+  ve_flex.withdraw({ 'from': admin, 'gas_price': 1e9 })
+  assert ve_flex.supply() == 0
