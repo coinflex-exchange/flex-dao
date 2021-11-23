@@ -62,7 +62,7 @@ def test_stake_and_withdraw(admin: Account, deploy_ve_flex: veFLEX):
   # admin stake some flex
   unlock_time  = chain.time() + (4 * 7 * 86400) # 4 weeks in seconds
   extent_unlock_time  = chain.time() + (8 * 7 * 86400) # 8 weeks in seconds
-  invalid_unlock_time =  chain.time() + (4 * 366 * 86400) # 4 years and 1 second
+  invalid_unlock_time =  chain.time() + (5 * 365 * 86400) # longer than 4 years
   ve_flex.create_lock(1e18, unlock_time, { 'from': admin, 'gas_price': 1e9 })
   assert ve_flex.supply() == 1e18
 
