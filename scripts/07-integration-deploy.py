@@ -72,6 +72,7 @@ def main():
     with open('params/integration-fixed.yml', 'rb') as dep:
       params: dict              = safe_load(dep)
       flex                      = params.get('flex', None)
+      ve_flex                   = params.get('ve_flex', None)
       
       name                      = params.get('name', None)
       symbol                    = params.get('symbol', None)
@@ -83,10 +84,15 @@ def main():
       name_daily                = params.get('name_daily', None)
       name_quarterly            = params.get('name_quarterly', None)
       delegatee                 = params.get('delegatee', None) 
-
+      
+      to_deploy_daily           = params.get('to_deploy_daily', None) 
+      to_deploy_quarterly       = params.get('to_deploy_quarterly', None) 
 
       if flex is None or not isinstance(flex, str) or len(flex) < 1:
         print(f'{TERM_RED}Invalid `flex` parameter found in `params/interation.yml` file.{TERM_NFMT}')
+        return
+      elif ve_flex is None or not isinstance(ve_flex, str):
+        print(f'{TERM_RED}Invalid `ve_flex` parameter found in `params/interation.yml` file.{TERM_NFMT}')
         return
       elif name is None or not isinstance(name, str) or len(name) < 1:
         print(f'{TERM_RED}Invalid `name` parameter found in `params/interation.yml` file.{TERM_NFMT}')
@@ -112,6 +118,12 @@ def main():
       elif delegatee is None or not isinstance(delegatee, str) or len(delegatee) < 1:
         print(f'{TERM_RED}Invalid `name_quarterly` parameter found in `params/interation.yml` file.{TERM_NFMT}')
         return
+      elif to_deploy_daily is None or not isinstance(to_deploy_daily, int):
+        print(f'{TERM_RED}Invalid `to_deploy_daily` parameter found in `params/interation.yml` file.{TERM_NFMT}')
+        return
+      elif to_deploy_quarterly is None or not isinstance(to_deploy_quarterly, int):
+        print(f'{TERM_RED}Invalid `to_deploy_quarterly` parameter found in `params/interation.yml` file.{TERM_NFMT}')
+        return
   except FileNotFoundError:
     print(f'{TERM_RED}Cannot find `params/interation.yml` file containing deployment parameters.{TERM_NFMT}')
     return
@@ -120,70 +132,73 @@ def main():
   gas_strategy = ExponentialScalingStrategy('10 gwei', '50 gwei')
 
   ### 1. Deploy veFLEX ###
-  ve_flex = veFLEX.deploy(flex, name, symbol, version, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'veFLEX: { ve_flex } at block height {ve_flex.tx.block_number}')
-
-  if start_block_height <= ve_flex.tx.block_number:
-    print(f'{TERM_RED}Aborting deployment, the payout start block height should be bigger than veFlex contract deployment block height.{TERM_NFMT}')
-    return
+  if len(ve_flex) == 0:
+    ve_flex = veFLEX.deploy(flex, name, symbol, version, { 'from': acct, 'gas_price': gas_strategy })
+    print(f'veFLEX: { ve_flex } at block height {ve_flex.tx.block_number}')
 
   ### 2. Deploy Daily Payout ###
-  daily_payout = DailyPayout.deploy(flex, ve_flex, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'DailyPayout: { daily_payout }')
+  if to_deploy_daily:
+    daily_payout = DailyPayout.deploy(flex, ve_flex, { 'from': acct, 'gas_price': gas_strategy })
+    print(f'DailyPayout: { daily_payout }')
 
-  ### 2.1. Set Start block height ###
-  daily_payout.setStartBlockHeight(start_block_height, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'Start block height: { daily_payout.startBlockHeight() }') 
+    ### 2.1. Set Start block height ###
+    daily_payout.setStartBlockHeight(start_block_height, { 'from': acct, 'gas_price': gas_strategy })
+    print(f'Start block height: { daily_payout.startBlockHeight() }') 
 
-  ### 2.2. Add operator ###
-  daily_payout.addOperator(operator, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'Daily payout added an operator: {operator}')
+    ### 2.2. Add operator ###
+    daily_payout.addOperator(operator, { 'from': acct, 'gas_price': gas_strategy })
+    print(f'Daily payout added an operator: {operator}')
 
   ### 3. Deploy Quarterly Payout ###
-  quarterly_payout = QuarterlyPayout.deploy(flex, ve_flex, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'QuarterlyPayout: { quarterly_payout }')
+  if to_deploy_quarterly:
+    quarterly_payout = QuarterlyPayout.deploy(flex, ve_flex, { 'from': acct, 'gas_price': gas_strategy })
+    print(f'QuarterlyPayout: { quarterly_payout }')
 
-  ### 3.1. Set Start block height ###
-  quarterly_payout.setStartBlockHeight(start_block_height, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'Start time: { quarterly_payout.startBlockHeight() }') 
+    ### 3.1. Set Start block height ###
+    quarterly_payout.setStartBlockHeight(start_block_height, { 'from': acct, 'gas_price': gas_strategy })
+    print(f'Start time: { quarterly_payout.startBlockHeight() }') 
 
-  ### 3.2. Add operator ###
-  quarterly_payout.addOperator(operator, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'Quarterly payout added an operator: {operator}')
+    ### 3.2. Add operator ###
+    quarterly_payout.addOperator(operator, { 'from': acct, 'gas_price': gas_strategy })
+    print(f'Quarterly payout added an operator: {operator}')
 
   ### 4. Deploy mini Daily Distributor ###
-  distributor_daily = Distributor.deploy(daily_payout, flex , name_daily, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'Distributor daily: { distributor_daily }')
+  if to_deploy_daily:
+    distributor_daily = Distributor.deploy(daily_payout, flex , name_daily, { 'from': acct, 'gas_price': gas_strategy })
+    print(f'Distributor daily: { distributor_daily }')
 
-  ### 4.1. Add mini daily distributor into whitelist of daily payout ###
-  daily_payout.addDistributor(distributor_daily, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'Enable distributor {distributor_daily} in daily payout {daily_payout}')
+    ### 4.1. Add mini daily distributor into whitelist of daily payout ###
+    daily_payout.addDistributor(distributor_daily, { 'from': acct, 'gas_price': gas_strategy })
+    print(f'Enable distributor {distributor_daily} in daily payout {daily_payout}')
 
-  ### 4.2. Add additional delegatee for mini distributor ###
-  distributor_daily.addDistributor(delegatee, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'Daily distributor added an delegatee: {delegatee}')
+    ### 4.2. Add additional delegatee for mini distributor ###
+    distributor_daily.addDistributor(delegatee, { 'from': acct, 'gas_price': gas_strategy })
+    print(f'Daily distributor added an delegatee: {delegatee}')
 
   ### 5. Deployment mini Quarterly Distributor ###
-  distributor_quarterly = Distributor.deploy(quarterly_payout, flex , name_quarterly, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'Distributor quarterly: { distributor_quarterly }')
+  if to_deploy_quarterly:
+    distributor_quarterly = Distributor.deploy(quarterly_payout, flex , name_quarterly, { 'from': acct, 'gas_price': gas_strategy })
+    print(f'Distributor quarterly: { distributor_quarterly }')
 
-  ### 5.1. Add mini Quarterly distributor into whitelist of Quarterly payout ###
-  quarterly_payout.addDistributor(distributor_quarterly, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'Enable distributor {distributor_quarterly} in quarterly payout {quarterly_payout}')
-  
-  ### 5.2. Add additional delegatee for mini distributor ###
-  distributor_quarterly.addDistributor(delegatee, { 'from': acct, 'gas_price': gas_strategy })
-  print(f'Quarterly distributor added an delegatee: {delegatee}')
+    ### 5.1. Add mini Quarterly distributor into whitelist of Quarterly payout ###
+    quarterly_payout.addDistributor(distributor_quarterly, { 'from': acct, 'gas_price': gas_strategy })
+    print(f'Enable distributor {distributor_quarterly} in quarterly payout {quarterly_payout}')
+    
+    ### 5.2. Add additional delegatee for mini distributor ###
+    distributor_quarterly.addDistributor(delegatee, { 'from': acct, 'gas_price': gas_strategy })
+    print(f'Quarterly distributor added an delegatee: {delegatee}')
 
   print(f'{TERM_RED}###DEPLOYMENT SUMMARY###{TERM_NFMT}')
   print(f'FLEX deployed at: {flex}');
   print(f'veFLEX deployed at: {ve_flex}')
-  print(f'Daily payout deployed at: {daily_payout} with start height: {start_block_height}')
-  print(f'Daily payout added an operator {operator}')
-  print(f'Quarterly payout deployed at: {quarterly_payout} with start height: {start_block_height}')
-  print(f'Quarterly payout added an operator {operator}')
-  print(f'Mini Daily distributor deployed at {distributor_daily}')
-  print(f'Mini Daily distributor added a delegatee {delegatee}')
-  print(f'Mini Quarterly distributor deployed at {distributor_quarterly}')
-  print(f'Mini Quaterly distributor added a delegatee {delegatee}')
+  if to_deploy_daily:
+    print(f'Daily payout deployed at: {daily_payout} with start height: {start_block_height}')
+    print(f'Daily payout added an operator {operator}')
+    print(f'Mini Daily distributor deployed at {distributor_daily}')
+    print(f'Mini Daily distributor added a delegatee {delegatee}')
+  if to_deploy_quarterly:
+    print(f'Quarterly payout deployed at: {quarterly_payout} with start height: {start_block_height}')
+    print(f'Quarterly payout added an operator {operator}')
+    print(f'Mini Quarterly distributor deployed at {distributor_quarterly}')
+    print(f'Mini Quaterly distributor added a delegatee {delegatee}')
   print(f'{TERM_RED}######END###############{TERM_NFMT}')
