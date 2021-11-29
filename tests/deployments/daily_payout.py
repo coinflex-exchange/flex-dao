@@ -10,7 +10,7 @@
 # HISTORY:
 #*************************************************************
 ### Project Contracts ###
-from brownie import FLEXCoin, DailyPayout, veFLEX, reverts
+from brownie import FLEXCoin, DailyPayout, QuarterlyPayout, veFLEX, reverts
 ### Third-Party Packages ###
 from brownie.network.gas.strategies import ExponentialScalingStrategy
 from brownie.network import Chain
@@ -37,6 +37,23 @@ def deploy_daily_payout(admin: Account, deploy_flex: FLEXCoin, deploy_ve_flex: v
   gas_strategy    = ExponentialScalingStrategy('10 gwei', '50 gwei')
   ### Deployment ###
   return DailyPayout.deploy(flex, ve_flex, { 'from': admin, 'gas_price': gas_strategy })
+
+@fixture
+def deploy_quarterly_payout(admin: Account, deploy_flex: FLEXCoin, deploy_ve_flex: veFLEX) -> QuarterlyPayout:
+  '''
+  TEST: Deploy QuarterlyPayout Contract
+  
+  ---
+  :param: admin  `Account`  the wallet address to deploy the contract from  
+  :param: deploy_flex  `FLEXCoin`  generic ERC-20 to serve as the Staking Token  
+  :param: deploy_ve_flex  `veFLEX`  vested balance token for given token  
+  '''
+  flex: FLEXCoin            = deploy_flex
+  ve_flex: veFLEX           = deploy_ve_flex
+  gas_strategy              = ExponentialScalingStrategy('10 gwei', '50 gwei')
+  ### Deployment ###
+  return QuarterlyPayout.deploy(flex, ve_flex, { 'from': admin, 'gas_price': gas_strategy })
+  
 
 def test_deploy_daily_payout(admin: Account, deploy_flex: FLEXCoin, deploy_ve_flex: veFLEX):
   '''

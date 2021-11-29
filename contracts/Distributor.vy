@@ -29,9 +29,17 @@ event CallDistribute:
   distributor: indexed(address)
   amount: uint256
 
-event IsDistributor:
+event AddDistributor:
   distributor: address
   status: bool
+
+event RemoveDistributor:
+  distributor: address
+  status: bool
+
+event UpdatePayoutAddr:
+  prevPayoutAddr: address
+  currPayoutAddr: address
 
 @external
 def __init__(_payout: address, _flex: address, _name: String[64]):
@@ -82,7 +90,7 @@ def addDistributor(_addr: address):
   assert msg.sender == self.admin,   'You are not the admin'            # dev: admin only
   assert _addr      != ZERO_ADDRESS, 'Delegatee address cannot be null' # dev: delegatee not set
   self.isDistributor[_addr] = True
-  log IsDistributor(_addr, True)
+  log AddDistributor(_addr, True)
 
 @external
 def removeDistributor(_addr: address):
@@ -93,4 +101,16 @@ def removeDistributor(_addr: address):
   assert msg.sender == self.admin,   'You are not the admin'            # dev: admin only
   assert _addr      != ZERO_ADDRESS, 'Delegatee address cannot be null' # dev: delegatee not set
   self.isDistributor[_addr] = False
-  log IsDistributor(_addr, False)
+  log RemoveDistributor(_addr, False)
+
+@external
+def updatePayoutAddr(_addr: address):
+  '''
+  @notice Update payout contract address for distributing to a new payout contract
+  @param _addr Address to distribute to
+  '''
+  assert msg.sender == self.admin,   'You are not the admin'            # dev: admin only
+  assert _addr      != ZERO_ADDRESS, 'payout cannot be null' # dev: delegatee not set
+  _prev: address     = self.payout
+  self.payout        = _addr
+  log UpdatePayoutAddr(_prev, _addr)
