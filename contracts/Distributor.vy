@@ -31,11 +31,9 @@ event CallDistribute:
 
 event AddDistributor:
   distributor: address
-  status: bool
 
 event RemoveDistributor:
   distributor: address
-  status: bool
 
 event UpdatePayoutAddr:
   prevPayoutAddr: address
@@ -90,7 +88,7 @@ def addDistributor(_addr: address):
   assert msg.sender == self.admin,   'You are not the admin'            # dev: admin only
   assert _addr      != ZERO_ADDRESS, 'Delegatee address cannot be null' # dev: delegatee not set
   self.isDistributor[_addr] = True
-  log AddDistributor(_addr, True)
+  log AddDistributor(_addr)
 
 @external
 def removeDistributor(_addr: address):
@@ -101,7 +99,7 @@ def removeDistributor(_addr: address):
   assert msg.sender == self.admin,   'You are not the admin'            # dev: admin only
   assert _addr      != ZERO_ADDRESS, 'Delegatee address cannot be null' # dev: delegatee not set
   self.isDistributor[_addr] = False
-  log RemoveDistributor(_addr, False)
+  log RemoveDistributor(_addr)
 
 @external
 def updatePayoutAddr(_addr: address):

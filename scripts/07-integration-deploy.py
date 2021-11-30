@@ -31,9 +31,10 @@ def main():
     3: 'ropsten',         # ropsten testnet
     42: 'kovan',          # kovan testnet
     1337: 'dev',          # local ganache-cli evm
+    10000: 'smartbch-mainnet',
     10001: 'smartbch-amber' # smartbch testnet
   }
-  if chain._chainid in (1, 42, 1337, 10001):
+  if chain._chainid in (1, 42, 1337, 10000, 10001):
     chain_name = chain_map[chain._chainid]
     file_name = 'wallet.yml' if chain_name is None else f'wallet.{chain_name}.yml'
     ### Load Mnemonic from YAML File ###
@@ -69,7 +70,7 @@ def main():
   symbol: str  = None
   version: str = None
   try:
-    with open('params/integration-fixed.yml', 'rb') as dep:
+    with open('params/07-integration-fixed.yml', 'rb') as dep:
       params: dict              = safe_load(dep)
       flex                      = params.get('flex', None)
       ve_flex                   = params.get('ve_flex', None)
@@ -129,7 +130,7 @@ def main():
     return
 
   ### Set Gas Price ##
-  gas_strategy = ExponentialScalingStrategy('10 gwei', '50 gwei')
+  gas_strategy = ExponentialScalingStrategy('1.05 gwei', '5 gwei')
 
   ### 1. Deploy veFLEX ###
   if len(ve_flex) == 0:
