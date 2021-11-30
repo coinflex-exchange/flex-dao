@@ -1,4 +1,6 @@
 # require OpenZepplin Contracts
+networks:
+  default: development
 dependencies:
   - OpenZeppelin/openzeppelin-contracts@4.1.0
 compiler:
