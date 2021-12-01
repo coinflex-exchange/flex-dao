@@ -27,12 +27,12 @@ def main():
   chain: Chain  = Chain()
   print(f'Network Chain-ID: { chain }')
   chain_map = {
-    1: None,              # mainnet
-    3: 'ropsten',         # ropsten testnet
-    42: 'kovan',          # kovan testnet
-    1337: 'dev',          # local ganache-cli evm
-    10000: 'smartbch-mainnet',
-    10001: 'smartbch-amber' # smartbch testnet
+    1: None,                   # mainnet
+    3: 'ropsten',              # ropsten testnet
+    42: 'kovan',               # kovan testnet
+    1337: 'dev',               # local ganache-cli evm
+    10000: 'smartbch-mainnet', # smartbch mainnet
+    10001: 'smartbch-amber'    # smartbch testnet
   }
   if chain._chainid in (1, 42, 1337, 10000, 10001):
     chain_name = chain_map[chain._chainid]

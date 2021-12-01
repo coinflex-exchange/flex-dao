@@ -27,13 +27,14 @@ def main():
   chain: Chain  = Chain()
   print(f'Network Chain-ID: { chain }')
   chain_map = {
-    1: None,              # mainnet
-    3: 'ropsten',         # ropsten testnet
-    42: 'kovan',          # kovan testnet
-    1337: 'dev',          # local ganache-cli evm
-    10001: 'smartbch-amber' # smartbch testnet
+    1: None,                    # mainnet
+    3: 'ropsten',               # ropsten testnet
+    42: 'kovan',                # kovan testnet
+    1337: 'dev',                # local ganache-cli evm
+    10000: 'smartbch-mainnet',  # smartbch mainnet
+    10001: 'smartbch-amber'     # smartbch testnet
   }
-  if chain._chainid in (1, 42, 1337, 10001):
+  if chain._chainid in (1, 42, 1337, 10000, 10001):
     chain_name = chain_map[chain._chainid]
     file_name = 'wallet.yml' if chain_name is None else f'wallet.{chain_name}.yml'
     ### Load Mnemonic from YAML File ###
@@ -69,7 +70,7 @@ def main():
   symbol: str  = None
   version: str = None
   try:
-    with open('params/ownership-transfer.yml', 'rb') as dep:
+    with open('params/08-ownership-transfer.yml', 'rb') as dep:
       params: dict                                                                = safe_load(dep)
 
       veFLEX_new_admin                                                            = params.get('veFLEX_new_admin', None)
@@ -91,10 +92,6 @@ def main():
       mini_quarterly_distributor_new_admin                                        = params.get('mini_quarterly_distributor_new_admin', None)
       mini_quarterly_distributor_addr                                             = params.get('mini_quarterly_distributor_addr', None)
       transfer_mini_quarterly_distributor_admin_to                                = params.get('transfer_mini_quarterly_distributor_admin_to', None)
-
-
-      
-      
 
       if veFLEX_new_admin is None or not isinstance(veFLEX_new_admin, str):
         print(f'{TERM_RED}Invalid `veFLEX_new_admin` parameter found in `params/ownership-transfer.yml` file.{TERM_NFMT}')
@@ -151,7 +148,7 @@ def main():
     return
 
   ### Set Gas Price ##
-  gas_strategy = ExponentialScalingStrategy('10 gwei', '50 gwei')
+  gas_strategy = ExponentialScalingStrategy('1.05 gwei', '5 gwei')
 
   ### 1. trasnfer ownership of veFLEX ###
   if transfer_veFLEX_admin_to: 
