@@ -69,12 +69,10 @@ def test_distributor(deploy_daily_distributor: Distributor, admin: Account, user
   assert distributor.isDistributor(alice) == True
   assert distributor.isDistributor(bob) == False
   assert tx.events['AddDistributor']['distributor'] == alice
-  assert tx.events['AddDistributor']['status'] == True
 
   tx= distributor.removeDistributor(alice)
   assert distributor.isDistributor(alice) == False
   assert tx.events['RemoveDistributor']['distributor'] == alice
-  assert tx.events['RemoveDistributor']['status'] == False
 
   # 2: admin and delegator can distribute while others cannot
   with reverts('You must transfer more than zero FLEX'):

@@ -42,8 +42,8 @@ def main():
       with open(file_name) as f:
         content = safe_load(f)
         ### Read Mnemonic ###
-        mnemonic = content.get('mnemonic', None)
-        acct = accounts.from_mnemonic(mnemonic, count=1)
+        privkey = content.get('privkey', None)
+        acct = accounts.add(privkey)
     except FileNotFoundError:
       print(f'{TERM_RED}Cannot find wallet mnemonic file defined at `{file_name}`.{TERM_NFMT}')
       return
@@ -165,7 +165,7 @@ def main():
 
   ### 4. Deploy mini Daily Distributor ###
   if to_deploy_daily:
-    distributor_daily = Distributor.deploy(daily_payout, flex , name_daily, { 'from': acct, 'gas_price': gas_strategy })
+    distributor_daily = Distributor.deploy(daily_payout, flex, name_daily, { 'from': acct, 'gas_price': gas_strategy })
     print(f'\tDistributor daily: { distributor_daily }\n\n')
 
     ### 4.1. Add mini daily distributor into whitelist of daily payout ###
@@ -178,7 +178,7 @@ def main():
 
   ### 5. Deployment mini Quarterly Distributor ###
   if to_deploy_quarterly:
-    distributor_quarterly = Distributor.deploy(quarterly_payout, flex , name_quarterly, { 'from': acct, 'gas_price': gas_strategy })
+    distributor_quarterly = Distributor.deploy(quarterly_payout, flex, name_quarterly, { 'from': acct, 'gas_price': gas_strategy })
     print(f'\tDistributor quarterly: { distributor_quarterly }\n\n')
 
     ### 5.1. Add mini Quarterly distributor into whitelist of Quarterly payout ###

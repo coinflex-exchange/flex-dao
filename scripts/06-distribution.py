@@ -28,14 +28,14 @@ def main(gas_speed: str = 'standard'):
   chain: Chain  = Chain()
   print(f'Network Chain-ID: { chain }')
   chain_map = {
-    1: None,              # mainnet
-    3: 'ropsten',         # ropsten testnet
-    42: 'kovan',          # kovan testnet
-    1337: 'dev',          # local ganache-cli evm
-    10001: 'smartbch-amber', # smartbch testnet
-    10000: 'smartbch-mainnet'
+    1: None,                   # mainnet
+    3: 'ropsten',              # ropsten testnet
+    42: 'kovan',               # kovan testnet
+    1337: 'dev',               # local ganache-cli evm
+    10000: 'smartbch-mainnet', # smartbch mainnet
+    10001: 'smartbch-amber',   # smartbch testnet
   }
-  if chain._chainid in (1, 3, 42, 1337, 10001,10000):
+  if chain._chainid in (1, 3, 42, 1337, 10000, 10001):
     chain_name = chain_map[chain._chainid]
     file_name = 'wallet.yml' if chain_name is None else f'wallet.{chain_name}.yml'
     ### Load Mnemonic from YAML File ###
@@ -43,8 +43,8 @@ def main(gas_speed: str = 'standard'):
       with open(file_name) as f:
         content = safe_load(f)
         ### Read Mnemonic ###
-        mnemonic = content.get('mnemonic', None)
-        acct = accounts.from_mnemonic(mnemonic, count=1)
+        privkey = content.get('privkey', None)
+        acct = accounts.add(privkey)
     except FileNotFoundError:
       print(f'{TERM_RED}Cannot find wallet mnemonic file defined at `{file_name}`.{TERM_NFMT}')
       return

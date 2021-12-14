@@ -42,8 +42,8 @@ def main():
       with open(file_name) as f:
         content = safe_load(f)
         ### Read Mnemonic ###
-        mnemonic = content.get('mnemonic', None)
-        acct = accounts.from_mnemonic(mnemonic, count=1)
+        privkey = content.get('privkey', None)
+        acct = accounts.add(privkey)
     except FileNotFoundError:
       print(f'{TERM_RED}Cannot find wallet mnemonic file defined at `{file_name}`.{TERM_NFMT}')
       return
