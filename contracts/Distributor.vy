@@ -39,6 +39,11 @@ event UpdatePayoutAddr:
   prevPayoutAddr: address
   currPayoutAddr: address
 
+event RevertTransfer:
+  sender: address
+  transferTo: address
+  amount: uint256
+
 @external
 def __init__(_payout: address, _flex: address, _name: String[64]):
   '''
@@ -112,3 +117,20 @@ def updatePayoutAddr(_addr: address):
   _prev: address     = self.payout
   self.payout        = _addr
   log UpdatePayoutAddr(_prev, _addr)
+
+@external
+@nonreentrant('lock')
+def revertTransfer(_addr: address, amount: uint256=0):
+  '''
+  @notice Use only when it is required to some how reverse a transfer made to this contract
+  @param _addr Address to return the desired balance to
+  @param amount Balance to return to the desired the desired Address, if not provided will transfer all current balance to the provided Address
+  '''
+  assert msg.sender == self.admin, 'You are not the admin or valid delegatee'         # dev: admin only
+  assert _addr      != ZERO_ADDRESS, 'address to transfer to cannot be null' # dev: admin not set
+  flex_amount: uint256 = amount
+  if flex_amount==0:
+      flex_amount=ERC20(self.flex).balanceOf(self)
+  assert flex_amount > 0, 'You must reclaim more than zero FLEX' # dev: insufficient balance to reclaim
+  assert ERC20(self.flex).transfer(_addr, flex_amount)
+  log RevertTransfer(msg.sender, _addr,flex_amount)
