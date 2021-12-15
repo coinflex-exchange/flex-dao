@@ -117,7 +117,7 @@ def test_distributor(deploy_daily_distributor: Distributor, admin: Account, user
   assert flex.balanceOf(distributor) == '1500 ether'
   assert flex.balanceOf(alice) == '500 ether'
   
-  # 5.2: suceed revert transfer without amount param
+  # 5.2: succeed revert transfer without amount param
   distributor.revertTransfer(alice, {'from': admin})
   assert flex.balanceOf(distributor) == 0
   assert flex.balanceOf(alice) == '2000 ether'
@@ -131,7 +131,11 @@ def test_distributor(deploy_daily_distributor: Distributor, admin: Account, user
   with reverts('_transferTokens: exceeds balance'):
     distributor.revertTransfer(alice, '2500 ether', {'from': admin})
 
-  # 5.5: failed with reverting 0 balance
+  # 5.5: failed with revert to zero address  
+  with reverts('address to transfer to cannot be null'):
+    distributor.revertTransfer("0x0000000000000000000000000000000000000000", {'from': admin})
+
+  # 5.6: failed with reverting 0 balance
   distributor.revertTransfer(alice, {'from': admin})
   with reverts('You must reclaim more than zero FLEX'):
     distributor.revertTransfer(alice, {'from': admin})
