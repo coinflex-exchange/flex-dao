@@ -124,7 +124,7 @@ def revertTransfer(_addr: address, _amount: uint256=0):
   '''
   @notice Used only when it is required to somehow reverse a transfer made to this contract
   @param _addr Address to return/send the desired balance to
-  @param amount Balance to return to the desired Address. If not provided, will transfer all current balance to the provided Address
+  @param _amount Balance to return to the desired Address. If not provided, will transfer all current balance to the provided Address
   '''
   assert msg.sender == self.admin, 'You are not the admin or valid delegatee'         # dev: admin only
   assert _addr      != ZERO_ADDRESS, 'address to transfer to cannot be null' # dev: admin not set

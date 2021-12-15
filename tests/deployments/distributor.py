@@ -21,6 +21,7 @@ from .daily_payout import deploy_daily_payout, deploy_quarterly_payout
 from .flex import deploy_flex
 from .ve_flex import deploy_ve_flex # used by `deploy_daily_payout` and `deploy_quarterly_payout`
 from typing import List
+from brownie.convert import Wei
 
 @fixture
 def deploy_daily_distributor(admin: Account, deploy_flex: FLEXCoin, deploy_daily_payout: DailyPayout) -> Distributor:
@@ -102,3 +103,35 @@ def test_distributor(deploy_daily_distributor: Distributor, admin: Account, user
   distributor.distribute({'from': admin})
   assert newPayout.currentEpoch() == 1
   assert newPayout.payoutForEpoch(0) == amount
+
+  # 5: test revertTransfer
+  flex.transfer(alice, '2000 ether', {'from': admin})
+  balance_alice = Wei(flex.balanceOf(alice)).to('ether')
+  print(f'alice balance: {balance_alice} FLEX')
+
+  # 5.1: succeed revert transfer with amount param
+  flex.transfer(distributor, '2000 ether', {'from': alice})
+  assert flex.balanceOf(distributor) == '2000 ether'
+  assert flex.balanceOf(alice) == 0
+  distributor.revertTransfer(alice, '500 ether', {'from': admin})
+  assert flex.balanceOf(distributor) == '1500 ether'
+  assert flex.balanceOf(alice) == '500 ether'
+  
+  # 5.2: suceed revert transfer without amount param
+  distributor.revertTransfer(alice, {'from': admin})
+  assert flex.balanceOf(distributor) == 0
+  assert flex.balanceOf(alice) == '2000 ether'
+
+  # 5.3: failed with calling from non-admin
+  flex.transfer(distributor, '2000 ether', {'from': alice})
+  with reverts('You are not the admin or valid delegatee'):
+    distributor.revertTransfer(alice, '500 ether', {'from': bob})
+
+  # 5.4: failed with over distributor balance
+  with reverts('_transferTokens: exceeds balance'):
+    distributor.revertTransfer(alice, '2500 ether', {'from': admin})
+
+  # 5.5: failed with reverting 0 balance
+  distributor.revertTransfer(alice, {'from': admin})
+  with reverts('You must reclaim more than zero FLEX'):
+    distributor.revertTransfer(alice, {'from': admin})
