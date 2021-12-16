@@ -15,7 +15,7 @@ contract QuarterlyPayout is Ownable
   /* =========  MEMBER VARS ========== */
   IERC20 immutable public token;  // FLEX token
   IVested immutable public vested; // veFLEX
-  uint256 public constant EPOCH_BLOCKS = 15709; // 10 is for test and 17280 is average blocks in 1 day with 5s block interval
+  uint256 public constant EPOCH_BLOCKS = 15730; // 10 is for test and 15730 is average blocks in 1 day
   uint256 public startBlockHeight;
   uint256[] public payoutForEpoch;
   mapping(address => uint256) public claimedEpoches;
