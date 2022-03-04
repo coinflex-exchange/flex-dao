@@ -56,7 +56,13 @@ contract Controller
     require(vaults[_token] == address(0), 'vault');
     vaults[_token] = _vault;
   }
-
+  
+  function setConverter(address _input, address _output, address _converter) public 
+  {
+        require(msg.sender == governance, "!governance");
+        converters[_input][_output] = _converter;
+  }
+  
   function approveStrategy(address _token, address _strategy) public
   {
     require(msg.sender == timelock, '!timelock');
