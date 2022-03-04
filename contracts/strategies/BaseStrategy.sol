@@ -72,7 +72,7 @@ abstract contract BaseStrategy {
   function whitelistHarvesters(address[] calldata _harvesters)
     external
   {
-    require(msg.sender == governance || harvesters[msg.sender], 'not authorized');
+    require(msg.sender == governance, 'not authorized');
     for (uint i = 0; i < _harvesters.length; i++) {
       harvesters[_harvesters[i]] = true;
     }
