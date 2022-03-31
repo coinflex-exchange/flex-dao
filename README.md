@@ -2,21 +2,16 @@
 
 This repo contains the set of Contracts and the tools necessary for testing and deployment.
 
-See individual contract descriptions here
+## Deployed Contracts Addresses
 
->
-> |-- [Controller.sol](./docs/controller.md)  This is the main logic of the Decentralized Autonomous Organization  
-> |-- [fVault.sol](./docs/fvault.md)  
-> |-- [Timelock.sol](./docs/timelock.md)  
-> |-- [Strategies](./docs/strategies.md)  Tells you where to find original documentation on Strategies and Vaults  
-> &nbsp;&nbsp;|-- [BaseStrategy.sol](./docs/strategies/base_strategy.md)  
-> &nbsp;&nbsp;|-- [BaseStakingStrategy.sol](./docs/strategies/base_staking_strategy.md)  
-> &nbsp;&nbsp;|-- [FLEXStakingStrategy.sol](./docs/strategies/flex_staking_strategy.md)  
-> |-- [StakingRewards.sol](./docs/staking_rewards.md)  This is where the staking rewards rate for the staking strategy is calculated.  
-> &nbsp;  
-> Mocks  these are contracts that are not meant to be deployed or tested by this repo  
-> &nbsp;&nbsp;|-- [FLEX.sol](./docs/mocks/flex.md)  
-> &nbsp;  
+### Production contracts deployed on SmartBCH Mainnet
+
+- Flex Coin (staked coin and reward token): 0x98Dd7eC28FB43b3C4c770AE532417015fa939Dd3
+
+- veFlex (the DAO token / voting escrow token): 0xA9bB3b5334347F9a56bebb3f590E8dF97fC091f9
+
+- DailyPayout (daily payout distribution contract): 0xB226C60886e81920d3d913858678d8C9e71eC17E
+
 
 ## Contributions
 
@@ -41,12 +36,8 @@ pip install -U poetry
 pip3 install -U poetry
 ```
 
-Afterwards, you need the following python libraries
+Afterwards, you need to run the following command to install dependencies.
 
-1. [Brownie](https://github.com/eth-brownie/brownie), A Python-based development and testing framework for smart contracts targeting the Ethereum Virtual Machine.
-2. [Bip-Utils](https://github.com/ebellocchia/bip_utils), Implementation of BIP39, BIP32, BIP44, BIP49 and BIP84, Monero, Substrate for generation of crypto-currencies wallets (mnemonic phrases, seeds, private/public keys and addresses)
-
-...simply by running the following command
 
 ```bash
 poetry install
@@ -69,13 +60,4 @@ or individual unit test can be run using the following command
 
 ```bash
 pytest -k   `<unit_test_name>` 
-```
-
-## Deployment
-
-[TODO] Set up wallet using yaml file
-[TODO] Run deployment scripts under scripts/ directory
-
-```bash
-brownie run ...
 ```
