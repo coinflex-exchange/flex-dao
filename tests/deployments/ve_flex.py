@@ -10,7 +10,7 @@
 # HISTORY:
 #*************************************************************
 ### Project Contracts ###
-from brownie import Controller, FLEXCoin, veFLEX, Timelock, reverts
+from brownie import FLEXCoin, veFLEX, reverts
 from brownie.network import Chain
 ### Third-Party Packages ###
 from brownie.network.gas.strategies import ExponentialScalingStrategy
@@ -27,7 +27,6 @@ def deploy_ve_flex(admin: Account, deploy_flex: FLEXCoin) -> veFLEX:
 
   ---
   :param: admin  `Account`  the wallet address to deploy the contract from  
-  :param: governance  `Account`  the wallet address defined as DAO Controller governance  
   :param: deploy_flex  `FLEXCoin`  generic ERC-20 to serve as the Staking Token; Preferably FLEX  
   :returns: `veFLEX`
   '''
@@ -38,13 +37,12 @@ def deploy_ve_flex(admin: Account, deploy_flex: FLEXCoin) -> veFLEX:
   return veFLEX.deploy(flex, f'vested {flex.name()}', f've{flex.symbol()}', version, { 'from': admin, 'gas_price': gas_strategy })
 
 @mark.parametrize('version', ['v0', 'v1'])
-def test_deploy_ve_flex(admin: Account, governance: Account, deploy_flex: FLEXCoin, version: str):
+def test_deploy_ve_flex(admin: Account, deploy_flex: FLEXCoin, version: str):
   '''
   TEST: Deploy veFLEX Contract
   
   ---
   :param: admin  `Account`  the wallet address to deploy the contract from  
-  :param: governance  `Account`  the wallet address defined as DAO Controller governance  
   :param: deploy_flex  `FLEXCoin`  generic ERC-20 to serve as the Staking Token; Preferably FLEX  
   '''
   flex: FLEXCoin  = deploy_flex

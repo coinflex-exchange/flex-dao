@@ -53,17 +53,3 @@ def user_accounts() -> List[Account]:
   Use remaining accounts set up by Ganache-cli to be list of user accounts.
   '''
   return accounts[1:10]
-
-@fixture
-def governance() -> Account:
-  '''
-  Loads test Governance account using `wallet.governance.yml` found on root-folder
-  '''
-  return load_account('wallet.governance.yml')
-
-@fixture
-def treasury() -> Account:
-  '''
-  Loads test Treasury account using `wallet.treasury.yml` found on root-folder
-  '''
-  return load_account('wallet.treasury.yml')
